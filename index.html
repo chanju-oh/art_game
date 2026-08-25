@@ -480,6 +480,27 @@
   .runner-help{ color:var(--muted); font-size:12px; text-align:center; margin:8px 0; }
 
   @media (prefers-reduced-motion: reduce){ .ring-fg.danger{ animation:none; } }
+
+  .class-mode-bar{width:min(92vw,700px);margin:0 auto 20px;padding:12px 14px;background:var(--panel);border:1px solid var(--panel-line);border-radius:15px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .class-mode-status{font-size:12px;color:var(--muted)} .class-mode-status b{color:var(--text);font-size:14px}
+  .class-code-btn{border:1px solid var(--panel-line);background:var(--panel2);color:var(--text);border-radius:10px;padding:8px 13px;font-weight:800;cursor:pointer}
+  .menu-card.class-locked{opacity:.42;filter:saturate(.35);cursor:not-allowed!important;position:relative;transform:none!important}
+  .menu-card.class-locked:hover{transform:none!important;border-color:var(--panel-line)!important}
+  .menu-card.class-locked::after{content:"🔒 잠김";position:absolute;right:10px;top:10px;padding:5px 8px;border-radius:999px;background:rgba(11,12,16,.90);border:1px solid var(--panel-line);color:#d6d9e0;font-size:10px;font-weight:900}
+  .menu-card.class-active{position:relative;border-color:#8CE99A!important;box-shadow:0 0 0 2px rgba(140,233,154,.17)}
+  .menu-card.class-active::after{content:"지금 활동";position:absolute;right:10px;top:10px;padding:5px 8px;border-radius:999px;background:#17301f;border:1px solid rgba(140,233,154,.5);color:#8CE99A;font-size:10px;font-weight:900}
+  .class-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.74);padding:18px}.class-modal.show{display:flex}
+  .class-modal-card{width:min(92vw,430px);background:#15171E;border:1px solid #353947;border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.5);text-align:center}
+  .class-modal-title{font-family:'Do Hyeon',sans-serif;font-size:26px;margin-bottom:5px}.class-modal-desc{color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:14px}
+  .class-code-input{width:100%;background:var(--panel2);border:1px solid var(--panel-line);color:var(--text);border-radius:12px;padding:13px 15px;outline:none;text-align:center;font-size:22px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+  .class-modal-actions{display:flex;gap:8px;justify-content:center;margin-top:12px}.class-modal-msg{min-height:20px;margin-top:10px;color:#FF8A8A;font-size:12px}
+  .lock-notice{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:950;display:none;background:#1b1e27;border:1px solid #444a59;color:#f5f5f0;border-radius:12px;padding:11px 16px;font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.38)}
+  .lock-notice.show{display:block}
+  .teacher-code-table{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+  .teacher-code-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--panel-line);border-radius:10px;padding:8px 10px}
+  .teacher-code-row span{font-size:11px}.teacher-code-row b{font-family:'Do Hyeon',sans-serif;color:#8CE99A;font-size:18px;letter-spacing:.06em}
+  @media(max-width:650px){.teacher-code-table{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -490,6 +511,10 @@
     <button class="teacher-btn" id="goE">📊 교사용 스코어보드</button>
     <h1 class="disp">학기초 미니게임 모음</h1>
     <p class="sub">진행할 게임을 선택하세요</p>
+    <div class="class-mode-bar">
+      <div class="class-mode-status">현재 활동 · <b id="classModeLabel">명화 퍼즐 만들기</b></div>
+      <button class="class-code-btn" id="classCodeOpenBtn">🔑 다음 활동 코드 입력</button>
+    </div>
     <div class="menu-grid">
       <div class="menu-card c" id="goC">
         <div class="icon">🧩</div>
@@ -537,7 +562,7 @@
       <div class="brand">
         <div class="kicker">교사 전용 · 실시간 기록</div>
         <h1 class="disp">실시간 <span>스코어보드</span></h1>
-        <p>통합점수 수동 조정, 예비용 독립 스코어보드, 카운트다운과 스탑워치를 한 화면에서 사용합니다.</p>
+        <p>통합점수 수동 조정, 예비용 독립 스코어보드, 카운트다운과 스탑워치를 한 화면에서 사용합니다. 교사용 PIN: 2026</p>
       </div>
 
       <div class="section-head"><h2 class="disp">⚙️ 게임 설정</h2><span class="sub">카드 뒤집기는 6×6 고정</span></div>
@@ -571,6 +596,23 @@
       </div>
     </div>
 
+
+
+    <div class="teacher-tool-card" style="width:min(96vw,900px); margin:0 auto 14px;">
+      <div class="teacher-tool-title">🔐 수업 진행 코드표</div>
+      <div class="teacher-tool-desc">학생들은 처음에 명화 퍼즐만 열립니다. 아래 코드를 하나씩 알려주면 해당 활동 하나만 활성화됩니다. 마지막 FREE는 전체 게임을 엽니다.</div>
+      <div class="teacher-code-table">
+        <div class="teacher-code-row"><span>① 명화 퍼즐</span><b>처음부터</b></div>
+        <div class="teacher-code-row"><span>② 카드 뒤집기</span><b>427</b></div>
+        <div class="teacher-code-row"><span>③ 색 맞추기</span><b>815</b></div>
+        <div class="teacher-code-row"><span>④ 절대색감</span><b>362</b></div>
+        <div class="teacher-code-row"><span>⑤ 도자기 빚기</span><b>574</b></div>
+        <div class="teacher-code-row"><span>⑥ 색 순서 기억</span><b>693</b></div>
+        <div class="teacher-code-row"><span>⑦ 장애물 달리기</span><b>941</b></div>
+        <div class="teacher-code-row"><span>🎮 자유 활동</span><b>FREE</b></div>
+      </div>
+      <div class="teacher-tool-desc" style="margin:10px 0 0;">학생 기기마다 마지막 입력 상태가 저장되므로 새로고침해도 현재 활동이 유지됩니다.</div>
+    </div>
 
     <div class="teacher-tools-grid">
 
@@ -975,6 +1017,20 @@
 
 </div>
 
+  <div class="class-modal" id="classCodeModal">
+    <div class="class-modal-card">
+      <div class="class-modal-title">🔑 수업 활동 코드</div>
+      <div class="class-modal-desc">선생님이 알려준 코드를 입력하면 현재 활동이 바뀝니다.<br>이전 활동은 다시 잠깁니다.</div>
+      <input class="class-code-input" id="classCodeInput" maxlength="8" placeholder="CODE" autocomplete="off">
+      <div class="class-modal-actions">
+        <button class="btn btn-sub" id="classCodeCancelBtn">취소</button>
+        <button class="btn btn-run" id="classCodeApplyBtn">확인</button>
+      </div>
+      <div class="class-modal-msg" id="classCodeMsg"></div>
+    </div>
+  </div>
+  <div class="lock-notice" id="classLockNotice"></div>
+
 <script>
 (function(){
   "use strict";
@@ -1158,16 +1214,86 @@
       switchScreen('home');
     });
   });
+
+  var CLASS_MODE_KEY='artArcade_class_mode_v1';
+  var TEACHER_PIN='2026';
+  var CLASS_STAGES=[
+    {key:'c',label:'명화 퍼즐 만들기',code:null,menuId:'goC'},
+    {key:'d1',label:'카드 뒤집기',code:'427',menuId:'goD1'},
+    {key:'f',label:'색 맞추기',code:'815',menuId:'goF'},
+    {key:'g',label:'절대색감',code:'362',menuId:'goG'},
+    {key:'h',label:'도자기 빚기',code:'574',menuId:'goH'},
+    {key:'i',label:'색 순서 기억',code:'693',menuId:'goI'},
+    {key:'j',label:'미술실 장애물 달리기',code:'941',menuId:'goJ'}
+  ];
+  var classMode=(function(){
+    try{
+      var v=localStorage.getItem(CLASS_MODE_KEY);
+      if(v==='FREE') return 'FREE';
+      if(CLASS_STAGES.some(function(s){return s.key===v;})) return v;
+    }catch(e){}
+    return 'c';
+  })();
+  function saveClassMode(){try{localStorage.setItem(CLASS_MODE_KEY,classMode);}catch(e){}}
+  function classStageForKey(k){return CLASS_STAGES.find(function(s){return s.key===k;})||CLASS_STAGES[0];}
+  function currentClassLabel(){return classMode==='FREE'?'자유 활동 · 전체 게임':classStageForKey(classMode).label;}
+  function isClassGameAllowed(k){return classMode==='FREE'||classMode===k;}
+  function showClassNotice(msg){
+    var el=$('classLockNotice'); if(!el)return; el.textContent=msg; el.classList.add('show');
+    clearTimeout(showClassNotice._t); showClassNotice._t=setTimeout(function(){el.classList.remove('show');},1800);
+  }
+  function refreshClassModeUI(){
+    if($('classModeLabel')) $('classModeLabel').textContent=currentClassLabel();
+    CLASS_STAGES.forEach(function(s){
+      var card=$(s.menuId); if(!card)return;
+      card.classList.remove('class-locked','class-active');
+      if(classMode==='FREE') return;
+      if(classMode===s.key) card.classList.add('class-active'); else card.classList.add('class-locked');
+    });
+  }
+  function requireClassGame(k){
+    if(isClassGameAllowed(k))return true;
+    showClassNotice('🔒 지금은 '+currentClassLabel()+' 시간입니다.');
+    return false;
+  }
+  function applyClassCode(raw){
+    var code=String(raw||'').trim().toUpperCase();
+    if(code==='FREE'){classMode='FREE';saveClassMode();refreshClassModeUI();return{ok:true,msg:'자유 활동 모드 · 모든 게임이 열렸습니다.'};}
+    var s=CLASS_STAGES.find(function(x){return x.code===code;});
+    if(!s)return{ok:false,msg:'코드가 맞지 않습니다.'};
+    classMode=s.key;saveClassMode();refreshClassModeUI();return{ok:true,msg:s.label+' 활동이 열렸습니다.'};
+  }
+  function openClassCodeModal(){
+    $('classCodeInput').value=''; $('classCodeMsg').textContent=''; $('classCodeModal').classList.add('show');
+    setTimeout(function(){$('classCodeInput').focus();},60);
+  }
+  function closeClassCodeModal(){$('classCodeModal').classList.remove('show');}
+  $('classCodeOpenBtn').addEventListener('click',openClassCodeModal);
+  $('classCodeCancelBtn').addEventListener('click',closeClassCodeModal);
+  $('classCodeApplyBtn').addEventListener('click',function(){
+    var r=applyClassCode($('classCodeInput').value);
+    $('classCodeMsg').style.color=r.ok?'#8CE99A':'#FF8A8A'; $('classCodeMsg').textContent=r.msg;
+    if(r.ok)setTimeout(function(){closeClassCodeModal();showClassNotice(r.msg);},450);
+  });
+  $('classCodeInput').addEventListener('keydown',function(e){if(e.key==='Enter')$('classCodeApplyBtn').click();if(e.key==='Escape')closeClassCodeModal();});
+  $('classCodeModal').addEventListener('click',function(e){if(e.target===$('classCodeModal'))closeClassCodeModal();});
+  refreshClassModeUI();
+
   $('goC').addEventListener('click', function(){
+    if(!requireClassGame('c')) return;
     root.style.setProperty('--accent', '#B18CFF');
     cGridN = 5;
     switchScreen('c-setup');
   });
   $('goD1').addEventListener('click', function(){
+    if(!requireClassGame('d1')) return;
     root.style.setProperty('--accent', '#FF8FD8');
     switchScreen('d1-setup');
   });
   $('goE').addEventListener('click', function(){
+    var pin=prompt('교사용 PIN을 입력하세요.');
+    if(pin===null)return;
+    if(String(pin).trim()!==TEACHER_PIN){showClassNotice('교사용 PIN이 맞지 않습니다.');return;}
     root.style.setProperty('--accent', '#FFC145');
     eTeams = ensureMasterTeams(sharedConfig.groupCount);
     if(eActivities.length === 0) eActivities = DEFAULT_ACTIVITIES.slice();
@@ -1180,18 +1306,22 @@
     switchScreen('e-main');
   });
   $('goF').addEventListener('click', function(){
+    if(!requireClassGame('f')) return;
     root.style.setProperty('--accent', '#5FD9FF');
     switchScreen('f-setup');
   });
   $('goG').addEventListener('click', function(){
+    if(!requireClassGame('g')) return;
     root.style.setProperty('--accent', '#FF6B9D');
     switchScreen('g-setup');
   });
   $('goH').addEventListener('click', function(){
+    if(!requireClassGame('h')) return;
     root.style.setProperty('--accent', '#D2A679');
     switchScreen('h-setup');
   });
   $('goI').addEventListener('click', function(){
+    if(!requireClassGame('i')) return;
     root.style.setProperty('--accent', '#8CE99A');
     iTeams = ensureMasterTeams(sharedConfig.groupCount);
     iCurrentTeamIdx = 0;
@@ -1199,6 +1329,7 @@
     switchScreen('i-play');
   });
   $('goJ').addEventListener('click', function(){
+    if(!requireClassGame('j')) return;
     root.style.setProperty('--accent', '#FFB454');
     jTeams = ensureMasterTeams(sharedConfig.groupCount);
     jCurrentTeamIdx = 0;
