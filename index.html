@@ -148,7 +148,7 @@
 
   /* ---- gallery ---- */
   .gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; margin-bottom:6px; }
-  .gallery-card{ background:var(--panel); border:2px solid var(--panel-line); border-radius:12px; overflow:hidden; cursor:pointer; text-align:center; transition:border-color .15s ease; }
+  .gallery-card{ position:relative; background:var(--panel); border:2px solid var(--panel-line); border-radius:12px; overflow:hidden; cursor:pointer; text-align:center; transition:border-color .15s ease; }
   .gallery-card.solved{ opacity:.4; cursor:not-allowed; border-color:#8CE99A; }
   .gallery-card:hover{ border-color:var(--accent); }
   .gallery-card.selected{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(79,217,198,.25); }
@@ -158,10 +158,24 @@
   .gallery-level{ font-size:9.5px; color:var(--muted); padding-bottom:5px; }
 
 
+
+  .gallery-card.solved{
+    opacity:1 !important;
+    cursor:pointer !important;
+    border-color:rgba(140,233,154,.55) !important;
+  }
+  .gallery-card.solved::after{
+    content:"득점 완료";
+    position:absolute; right:6px; top:6px;
+    background:rgba(11,18,14,.88); color:#8CE99A;
+    border:1px solid rgba(140,233,154,.45);
+    border-radius:999px; padding:3px 6px; font-size:8px; font-weight:900;
+  }
+
   /* ---- 명화 퍼즐 : 데스크톱 게임 보드 레이아웃 ---- */
   .puzzle-app-shell{
-    width:min(96vw,1500px); margin:0 auto; display:grid;
-    grid-template-columns:minmax(520px,1.35fr) minmax(280px,.72fr) minmax(330px,.9fr);
+    width:min(94vw,1120px); margin:0 auto; display:grid;
+    grid-template-columns:minmax(540px,1.45fr) minmax(290px,.55fr);
     gap:16px; align-items:start;
   }
   .puzzle-panel{
@@ -170,6 +184,7 @@
     box-shadow:0 12px 32px rgba(0,0,0,.18);
   }
   .puzzle-main-panel{ min-width:0; }
+  .puzzle-main-panel .puzzle-board-wrap{ width:min(70vh,680px); max-width:100%; }
   .puzzle-side-panel{ display:flex; flex-direction:column; gap:12px; min-width:0; }
   .puzzle-gallery-panel{ min-width:0; max-height:calc(100vh - 150px); overflow:auto; }
   .puzzle-topline{
@@ -185,6 +200,24 @@
   .puzzle-stat b{ font-family:'Do Hyeon',sans-serif; font-size:22px; }
   .puzzle-board-wrap{ position:relative; width:100%; aspect-ratio:1; margin:0 auto; }
   .puzzle-toolbar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+
+  .puzzle-art-note{
+    background:linear-gradient(180deg,var(--panel2),rgba(255,255,255,.015));
+    border:1px solid var(--panel-line);
+    border-radius:14px;
+    padding:15px;
+    line-height:1.72;
+  }
+  .puzzle-art-note .note-label{
+    font-size:10px; color:var(--muted); font-weight:900; letter-spacing:.12em;
+    margin-bottom:5px;
+  }
+  .puzzle-art-note .note-title{
+    font-family:'Do Hyeon',sans-serif; font-size:25px; color:var(--accent); margin-bottom:3px;
+  }
+  .puzzle-art-note .note-artist{ font-weight:800; font-size:13px; margin-bottom:10px; }
+  .puzzle-art-note .note-body{ color:var(--muted); font-size:12.5px; }
+
   .puzzle-info-card{
     background:var(--panel2); border:1px solid var(--panel-line); border-radius:14px;
     padding:14px;
@@ -212,10 +245,8 @@
     margin-top:12px; border:1px solid rgba(140,233,154,.3); background:rgba(140,233,154,.08);
     border-radius:12px; padding:10px 13px; color:#b7f1c1; font-size:12px; display:none;
   }
-  @media (max-width:1100px){
-    .puzzle-app-shell{ grid-template-columns:minmax(480px,1.25fr) minmax(300px,.75fr); }
-    .puzzle-gallery-panel{ grid-column:1/-1; max-height:none; }
-    .puzzle-play-gallery{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+  @media (max-width:980px){
+    .puzzle-app-shell{ grid-template-columns:minmax(470px,1.2fr) minmax(270px,.8fr); }
   }
   @media (max-width:760px){
     .puzzle-app-shell{ grid-template-columns:1fr; width:min(96vw,620px); }
@@ -251,10 +282,10 @@
   .hint-count{ font-size:12px; color:var(--muted); margin-top:4px; text-align:center; }
 
   /* ---- memory match ---- */
-  .mem-grid{ display:grid; gap:6px; margin:0 auto; width:fit-content; max-width:94vw; justify-content:center; align-content:center; }
-  .mem-card{ aspect-ratio:1/1; border-radius:7px; background:var(--panel2); border:2px solid var(--panel-line);
-    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:clamp(11px,2vw,18px); color:var(--muted);
-    background-size:cover; background-position:center; transition:transform .15s ease; }
+  .mem-grid{ display:grid; gap:8px; margin:0 auto; width:fit-content; max-width:97vw; justify-content:center; align-content:center; }
+  .mem-card{ aspect-ratio:1/1; border-radius:10px; background:var(--panel2); border:2px solid var(--panel-line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:clamp(16px,2.5vw,26px); color:var(--muted);
+    background-size:cover; background-position:center; background-repeat:no-repeat; transition:transform .15s ease; }
   .mem-card:hover{ transform:translateY(-3px); }
   .mem-card.matched{ border-color:#8CE99A; cursor:default; opacity:.85; }
   .mem-card.matched:hover{ transform:none; }
@@ -302,6 +333,47 @@
   .undo-btn:hover{ color:var(--text); }
   .e-timer-block{ background:var(--panel); border:1px solid var(--panel-line); border-radius:16px; padding:16px; text-align:center; max-width:360px; margin:0 auto 20px; }
   .e-timer-text{ font-family:'Do Hyeon',sans-serif; font-size:40px; margin-bottom:8px; font-variant-numeric:tabular-nums; }
+
+
+  .teacher-tools-grid{
+    width:min(96vw,900px); margin:0 auto 20px;
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  .teacher-tool-card{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:16px;
+    padding:15px;
+  }
+  .teacher-tool-title{
+    font-family:'Do Hyeon',sans-serif; font-size:21px; margin-bottom:4px;
+  }
+  .teacher-tool-desc{ font-size:11px; color:var(--muted); margin-bottom:12px; line-height:1.55; }
+  .backup-score-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+  .backup-row{
+    display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:6px;
+    background:var(--panel2); border:1px solid var(--panel-line); border-radius:10px; padding:7px;
+  }
+  .backup-name{ font-weight:800; font-size:12px; }
+  .backup-value{ font-family:'Do Hyeon',sans-serif; font-size:23px; text-align:center; }
+  .backup-btns{ display:flex; gap:3px; }
+  .backup-btn{
+    width:31px; height:31px; border-radius:8px; border:1px solid var(--panel-line);
+    background:#11141a; color:var(--text); cursor:pointer; font-weight:900;
+  }
+  .backup-btn.plus{ color:#8CE99A; }.backup-btn.minus{ color:#FF8A8A; }
+  .backup-reset{
+    margin-top:9px; width:100%; border:1px solid var(--panel-line); border-radius:9px;
+    padding:8px; background:var(--panel2); color:var(--muted); cursor:pointer;
+  }
+  .stopwatch-display{
+    font-family:'Do Hyeon',sans-serif; font-size:clamp(42px,7vw,62px);
+    font-variant-numeric:tabular-nums; text-align:center; letter-spacing:.03em;
+    margin:14px 0;
+  }
+  .stopwatch-controls{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  @media(max-width:760px){
+    .teacher-tools-grid{ grid-template-columns:1fr; }
+    .backup-score-grid{ grid-template-columns:1fr; }
+  }
 
   /* ---- F: 물감 혼색 게임 ---- */
   .color-boxes{ display:flex; gap:16px; justify-content:center; margin:14px 0 10px; }
@@ -465,11 +537,11 @@
       <div class="brand">
         <div class="kicker">교사 전용 · 실시간 기록</div>
         <h1 class="disp">실시간 <span>스코어보드</span></h1>
-        <p>조별로 여러 활동을 동시에 진행하고, 선생님이 돌아다니며 점수만 기록해요.</p>
+        <p>통합점수 수동 조정, 예비용 독립 스코어보드, 카운트다운과 스탑워치를 한 화면에서 사용합니다.</p>
       </div>
 
-      <div class="section-head"><h2 class="disp">⚙️ 게임 설정</h2><span class="sub">카드 뒤집기는 8×8 고정</span></div>
-      <div class="info-banner">카드 뒤집기: 8×8 · 총 64장 · 32쌍 고정</div>
+      <div class="section-head"><h2 class="disp">⚙️ 게임 설정</h2><span class="sub">카드 뒤집기는 6×6 고정</span></div>
+      <div class="info-banner">카드 뒤집기: 6×6 · 총 36장 · 18쌍 고정</div>
 
       <div class="section-head"><h2 class="disp">⏱ 전체 타이머</h2></div>
       <div class="field-row"><label>시작 시간</label><input id="cfgTimerMinutes" type="number" min="1" max="90" value="20"><span class="unit">분</span></div>
@@ -497,6 +569,28 @@
         <button class="btn-adjust" id="eTimerMinusBtn">−1분</button>
         <button class="btn-adjust" id="eTimerPlusBtn">+1분</button>
       </div>
+    </div>
+
+
+    <div class="teacher-tools-grid">
+
+      <div class="teacher-tool-card">
+        <div class="teacher-tool-title">🧮 예비용 수동 스코어보드</div>
+        <div class="teacher-tool-desc">게임 통합점수와 연결되지 않는 독립 보드입니다. 즉석 활동이나 예비 점수 기록용으로 사용합니다.</div>
+        <div class="backup-score-grid" id="eBackupScoreGrid"></div>
+        <button class="backup-reset" id="eBackupResetBtn">예비 점수 전체 초기화</button>
+      </div>
+
+      <div class="teacher-tool-card">
+        <div class="teacher-tool-title">⏱ 스탑워치</div>
+        <div class="teacher-tool-desc">0초부터 올라가는 카운트업 스탑워치입니다. 기존 전체 카운트다운 타이머와 별도로 작동합니다.</div>
+        <div class="stopwatch-display" id="eStopwatchText">00:00.0</div>
+        <div class="stopwatch-controls">
+          <button class="btn btn-run" id="eStopwatchRunBtn">시작</button>
+          <button class="btn btn-sub" id="eStopwatchResetBtn">↺ 초기화</button>
+        </div>
+      </div>
+
     </div>
 
     <div class="activity-tabs" id="eActivityTabs"></div>
@@ -736,7 +830,7 @@
       <div class="brand">
         <div class="kicker">명화 관찰 · 협동 퍼즐</div>
         <h1 class="disp">명화 <span>퍼즐 만들기</span></h1>
-        <p>스코어 버튼에서 우리 조를 고른 뒤 작품을 선택하세요. 고흐·뭉크·모네뿐 아니라 피카소·마네·달리·몬드리안·칸딘스키까지 포함한 5×5 퍼즐입니다.</p>
+        <p>스코어 버튼에서 우리 조를 고른 뒤 작품을 선택하세요. 게임을 시작하면 원본 썸네일과 작품 선택창은 숨겨지고, 작품·작가에 대한 짧은 설명만 표시됩니다. 같은 조는 같은 작품으로 한 번만 점수를 받을 수 있습니다. 난이도별로 쉬움 +3점 / 적당함 +5점 / 도전 +7점이며, 득점 완료 작품도 연습용으로 다시 플레이할 수 있습니다.</p>
       </div>
 
       <div class="team-tabs" id="cTeamTabs"></div>
@@ -775,7 +869,7 @@
           <div id="cPuzzleGrid" style="position:absolute; inset:0; display:grid; gap:2px; background:var(--panel-line); border-radius:12px; overflow:hidden;"></div>
           <div id="cHintOverlay" class="puzzle-hint-overlay"><img id="cHintImage" alt="원본 그림 힌트"></div>
           <div id="cSolvedOverlay" style="display:none; position:absolute; inset:0; background:rgba(11,12,16,.88); border-radius:12px; align-items:center; justify-content:center; flex-direction:column; gap:10px;">
-            <div class="disp" style="font-size:clamp(28px,6vw,44px); color:var(--accent);">완성! +5점</div>
+            <div class="disp" id="cSolvedHeadline" style="font-size:clamp(28px,6vw,44px); color:var(--accent);">완성!</div>
             <div id="cSolvedTime" style="color:var(--muted); font-size:14px;">00:00</div>
           </div>
         </div>
@@ -784,12 +878,11 @@
       </div>
 
       <div class="puzzle-side-panel">
-        <div class="puzzle-info-card">
-          <h3>원본 그림 · 힌트</h3>
-          <img id="cReferenceImage" class="puzzle-reference" alt="현재 작품 원본">
-          <div class="puzzle-work-title" id="cWorkTitle">작품 선택</div>
-          <div class="puzzle-work-artist" id="cWorkArtist"></div>
-          <div class="puzzle-work-meta" id="cWorkMeta">오른쪽 갤러리에서 퍼즐로 만들 작품을 고르세요.</div>
+        <div class="puzzle-art-note">
+          <div class="note-label">ARTWORK NOTE</div>
+          <div class="note-title" id="cWorkTitle">작품</div>
+          <div class="note-artist" id="cWorkArtist"></div>
+          <div class="note-body" id="cWorkMeta">작품과 작가에 대한 짧은 설명이 표시됩니다.</div>
         </div>
 
         <div class="puzzle-info-card">
@@ -797,20 +890,13 @@
           <ul class="puzzle-help">
             <li>서로 바꿀 두 조각을 차례로 누릅니다.</li>
             <li>힌트는 최대 3회, 한 번에 3초 동안 원본을 보여줍니다.</li>
-            <li>완성하면 선택된 조에 5점이 추가됩니다.</li>
+            <li>완성 점수: 쉬움 +3점 · 적당함 +5점 · 도전 +7점</li>
           </ul>
         </div>
 
         <button class="btn btn-sub" id="cBackToSetupBtn" style="width:100%;">← 작품 선택 화면으로</button>
       </div>
 
-      <div class="puzzle-panel puzzle-gallery-panel">
-        <div class="puzzle-gallery-head">
-          <h2 class="disp">🖼️ 퍼즐 선택</h2>
-          <p>다른 작품을 누르면 바로 새 퍼즐로 바뀝니다.</p>
-        </div>
-        <div id="cPlayGalleryGrid" class="puzzle-play-gallery"></div>
-      </div>
     </div>
   </section>
 
@@ -821,7 +907,7 @@
       <div class="brand">
         <div class="kicker">조별 점수 게임</div>
         <h1 class="disp">카드 <span>뒤집기</span></h1>
-        <p>명화와 친숙한 캐릭터 카드 64장을 뒤집어 짝을 맞춰요. 매번 상단에서 점수를 받을 조를 직접 선택합니다.</p>
+        <p>명화와 친숙한 캐릭터 카드 36장을 뒤집어 짝을 맞춰요. 매번 상단에서 점수를 받을 조를 직접 선택합니다.</p>
       </div>
       <div class="info-banner">6×6 고정 · 36장(18쌍) · 18종 이미지가 각각 한 쌍씩 등장</div>
 
@@ -832,7 +918,7 @@
   <!-- ================= D: MEMORY MATCH ================= -->
   <section id="screen-d-memory" class="screen" hidden style="align-items:center;">
     <button class="home-back" data-home>← 처음으로</button>
-    <div class="turn-badge">카드 뒤집어 맞추기 · 8×8</div>
+    <div class="turn-badge">카드 뒤집어 맞추기 · 6×6</div>
     <h1 class="disp" id="dMemTurnName" style="font-size:clamp(20px,4vw,30px); margin:2px 0 8px;">점수를 받을 조를 선택하세요</h1>
     <div class="team-tabs" id="dTeamTabs"></div>
     <div class="score-bar" id="dScoreBarMem"></div>
@@ -908,23 +994,50 @@
   var CIRC = 2 * Math.PI * 120;
 
   // ---- shared config (batch-adjustable from teacher tab) ----
-  var sharedConfig = { groupCount:6, pairCount:32, tolerance:15, timerMinutes:20 }; // 6조 고정, 카드 뒤집기 8x8(32쌍), 퍼즐 5x5
+  var sharedConfig = { groupCount:6, pairCount:18, tolerance:15, timerMinutes:20 }; // 6조 고정, 카드 뒤집기 8x8(32쌍), 퍼즐 5x5
 
   // ---- master team roster + score log, shared by every game AND the teacher tab ----
   var masterTeams = [];
   var eLog = []; // { teamIdx, activity, delta } — shared score history
+  var STORAGE_KEY = 'artArcade_v8_state';
+
+  function readSavedArcadeState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function saveArcadeState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        masterScores: masterTeams.map(function(t){ return Number(t.score)||0; }),
+        puzzleSolvedByTeam: cSolvedByTeam || {}
+      }));
+    }catch(e){}
+  }
+
   function ensureMasterTeams(n){
     n = (isNaN(n)||n<1) ? sharedConfig.groupCount : n;
     if(masterTeams.length !== n){
+      var saved = readSavedArcadeState();
       masterTeams = [];
-      for(var i=0;i<n;i++){ masterTeams.push({ name:(i+1)+"조", score:0 }); }
+      for(var i=0;i<n;i++){
+        var savedScore = saved && saved.masterScores && isFinite(saved.masterScores[i])
+          ? Number(saved.masterScores[i]) : 0;
+        masterTeams.push({ name:(i+1)+"조", score:savedScore });
+      }
     }
     return masterTeams;
   }
+
   function addMasterScore(teamIdx, activity, delta){
     if(!masterTeams[teamIdx]) return;
     masterTeams[teamIdx].score += delta;
     eLog.push({ teamIdx:teamIdx, activity:activity, delta:delta });
+    saveArcadeState();
     if(!$('screen-e-main').hidden){
       renderETeamList();
       renderELog();
@@ -1041,6 +1154,7 @@
       if(typeof gTimerId !== 'undefined' && gTimerId){ clearInterval(gTimerId); gTimerId=null; }
       if(typeof dPuzTimerId !== 'undefined' && dPuzTimerId){ clearInterval(dPuzTimerId); dPuzTimerId=null; }
       if(typeof jStopGame === 'function') jStopGame();
+      if(typeof ePauseStopwatch === 'function' && typeof eStopwatchRunning !== 'undefined' && eStopwatchRunning) ePauseStopwatch();
       switchScreen('home');
     });
   });
@@ -1055,15 +1169,15 @@
   });
   $('goE').addEventListener('click', function(){
     root.style.setProperty('--accent', '#FFC145');
-    if(masterTeams.length > 0){
-      renderEActivityTabs();
-      renderETeamList();
-      renderELog();
-      eUpdateTimerText();
-      switchScreen('e-main');
-    } else {
-      switchScreen('e-setup');
-    }
+    eTeams = ensureMasterTeams(sharedConfig.groupCount);
+    if(eActivities.length === 0) eActivities = DEFAULT_ACTIVITIES.slice();
+    renderEActivityTabs();
+    renderETeamList();
+    renderELog();
+    renderEBackupScores();
+    eUpdateTimerText();
+    eUpdateStopwatch();
+    switchScreen('e-main');
   });
   $('goF').addEventListener('click', function(){
     root.style.setProperty('--accent', '#5FD9FF');
@@ -1094,6 +1208,24 @@
     switchScreen('j-play');
   });
 
+
+  var PAINTING_NOTES = {
+    "Mona_Lisa":"르네상스 시대의 대표적인 초상화입니다. 부드러운 명암과 인물의 신비로운 표정으로 잘 알려져 있습니다.",
+    "The_Starry_Night":"고흐가 밤하늘의 움직임과 강렬한 감정을 소용돌이치는 붓질과 색으로 표현한 작품입니다.",
+    "The_Scream":"불안과 공포 같은 강한 감정을 과장된 인물과 뒤틀린 풍경으로 표현한 표현주의의 대표작입니다.",
+    "The_Great_Wave_off_Kanagawa":"거대한 파도와 작은 배, 멀리 보이는 후지산의 대비가 인상적인 일본 우키요에 목판화입니다.",
+    "The_Gleaners":"들판에서 이삭을 줍는 농민들의 일상을 차분하고 묵직하게 표현한 사실주의 작품입니다.",
+    "Girl_with_a_Pearl_Earring":"어두운 배경 속 인물의 시선과 빛나는 진주 귀걸이가 강조된 베르메르의 대표적인 인물화입니다.",
+    "The_Kiss_(Klimt)":"금빛 장식과 반복되는 문양 속에서 두 인물을 화려하고 평면적인 장식성으로 표현한 작품입니다.",
+    "Impression,_Sunrise":"빛과 대기의 순간적인 인상을 빠른 붓질과 색으로 담아낸 인상주의의 이름이 된 작품입니다.",
+    "Sunflowers_(Van_Gogh_series)":"노란색을 중심으로 해바라기의 생명력과 질감을 강한 붓질로 표현한 고흐의 연작입니다.",
+    "A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte":"작은 색점을 나란히 찍어 화면에서 색이 섞여 보이게 한 점묘법의 대표적인 작품입니다.",
+    "Guernica_(Picasso)":"전쟁의 참상을 흑백에 가까운 색과 분해된 형태로 표현한 피카소의 대형 반전 작품입니다.",
+    "The_Persistence_of_Memory":"녹아내리는 시계처럼 현실에서는 불가능한 장면을 통해 꿈과 시간의 느낌을 표현한 초현실주의 작품입니다.",
+    "Composition_with_Red_Blue_and_Yellow":"수직·수평선과 기본색만으로 화면의 질서와 균형을 탐구한 몬드리안의 추상 작품입니다.",
+    "Composition_8_(Kandinsky)":"원·선·삼각형 등 다양한 기하학 형태와 색을 음악의 리듬처럼 구성한 추상 작품입니다."
+  };
+
   /* =======================================================
      C. 명화 퍼즐 만들기 (스와프 퍼즐, 조별 진행)
      ======================================================= */
@@ -1110,7 +1242,22 @@
   var cHintTimer = null;
   var cTeams = [];
   var cCurrentTeamIdx = 0;
-  var cSolvedByTeam = {}; // { teamIdx: [wiki, wiki, ...] }
+  var C_PUZZLE_SCORE_BY_LEVEL = {
+    "쉬움": 3,
+    "적당함": 5,
+    "보통": 5,
+    "도전": 7
+  };
+
+  function cPuzzleScoreForPainting(p){
+    if(!p) return 5;
+    return C_PUZZLE_SCORE_BY_LEVEL[p.level] || 5;
+  }
+
+  var cSolvedByTeam = (function(){
+    var saved = readSavedArcadeState();
+    return saved && saved.puzzleSolvedByTeam ? saved.puzzleSolvedByTeam : {};
+  })(); // { teamIdx: [wiki, wiki, ...] }
 
   function cIsSolvedByCurrentTeam(wiki){
     var arr = cSolvedByTeam[cCurrentTeamIdx];
@@ -1133,7 +1280,7 @@
 
     var levelEl = document.createElement('div');
     levelEl.className = 'gallery-level';
-    levelEl.textContent = solved ? '✅ 완료함' : p.level;
+    levelEl.textContent = solved ? '✅ 득점 완료 · 재플레이 가능' : (p.level + ' · +' + cPuzzleScoreForPainting(p) + '점');
 
     card.appendChild(img);
     card.appendChild(titleEl);
@@ -1142,11 +1289,9 @@
 
     fetchPaintingImage(p, function(url){ if(url) img.src = url; });
 
-    if(!solved){
-      card.addEventListener('click', function(){
-        onPick(p, card, urlFromCard(img));
-      });
-    }
+    card.addEventListener('click', function(){
+      onPick(p, card, urlFromCard(img));
+    });
   }
 
   function urlFromCard(img){
@@ -1194,66 +1339,31 @@
 
       var levelEl = document.createElement('div');
       levelEl.className = 'gallery-level';
-      levelEl.textContent = solved ? '✅ 완료함' : p.level;
+      levelEl.textContent = solved ? '✅ 득점 완료 · 재플레이 가능' : (p.level + ' · +' + cPuzzleScoreForPainting(p) + '점');
 
       card.appendChild(img); card.appendChild(titleEl); card.appendChild(levelEl);
       grid.appendChild(card);
       fetchPaintingImage(p, function(url){ if(url) img.src = url; });
 
-      if(!solved){
-        card.addEventListener('click', function(){
-          choosePuzzlePainting(p, grid, card, function(){
-            $('cSetupNextBtn').disabled = false;
-          });
+      card.addEventListener('click', function(){
+        choosePuzzlePainting(p, grid, card, function(){
+          $('cSetupNextBtn').disabled = false;
         });
-      }
+      });
     });
   }
 
   function updatePuzzleWorkInfo(){
     if(!cCurrentPainting) return;
-    $('cReferenceImage').src = cImageURL || FALLBACK_IMG;
     $('cWorkTitle').textContent = cCurrentPainting.title.replace(/^.*? · /,'');
     $('cWorkArtist').textContent = cCurrentPainting.artist || cCurrentPainting.title.split(' · ')[0];
-    $('cWorkMeta').textContent = '난이도 · ' + cCurrentPainting.level + '  |  5×5 스와프 퍼즐';
+    $('cWorkMeta').textContent = (PAINTING_NOTES[cCurrentPainting.wiki] || '작품의 형태와 색, 화면 구성을 관찰하면서 퍼즐을 완성해 보세요.')
+      + '  · 난이도 ' + cCurrentPainting.level;
   }
 
   function renderCPlayGallery(){
-    var grid = $('cPlayGalleryGrid');
-    grid.innerHTML = "";
-    PRESET_PAINTINGS.forEach(function(p){
-      var solved = cIsSolvedByCurrentTeam(p.wiki);
-      var card = document.createElement('div');
-      card.className = 'gallery-card' + (solved ? ' solved' : '') + (cCurrentWiki===p.wiki ? ' selected' : '');
-
-      var img = document.createElement('img');
-      img.className = 'gallery-thumb';
-      img.alt = p.title;
-      img.src = FALLBACK_IMG;
-
-      var titleEl = document.createElement('div');
-      titleEl.className = 'gallery-title';
-      titleEl.textContent = p.title;
-
-      var levelEl = document.createElement('div');
-      levelEl.className = 'gallery-level';
-      levelEl.textContent = solved ? '✅ 완료함' : p.level;
-
-      card.appendChild(img); card.appendChild(titleEl); card.appendChild(levelEl);
-      grid.appendChild(card);
-      fetchPaintingImage(p, function(url){ if(url) img.src = url; });
-
-      if(!solved){
-        card.addEventListener('click', function(){
-          if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
-          choosePuzzlePainting(p, grid, card, function(){
-            updatePuzzleWorkInfo();
-            buildPuzzle();
-            renderCPlayGallery();
-          });
-        });
-      }
-    });
+    // 플레이 중에는 원본 썸네일/작품 갤러리를 표시하지 않습니다.
+    // 작품 변경은 게임 시작 전 선택 화면에서만 가능합니다.
   }
 
 
@@ -1359,17 +1469,42 @@
   }
   function onPuzzleSolved(){
     if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+
     if(!cSolvedByTeam[cCurrentTeamIdx]) cSolvedByTeam[cCurrentTeamIdx] = [];
-    if(cCurrentWiki && cSolvedByTeam[cCurrentTeamIdx].indexOf(cCurrentWiki) === -1){
+
+    var firstScore = !!(cCurrentWiki &&
+      cSolvedByTeam[cCurrentTeamIdx].indexOf(cCurrentWiki) === -1);
+
+    var puzzleScore = cPuzzleScoreForPainting(cCurrentPainting);
+
+    if(firstScore){
       cSolvedByTeam[cCurrentTeamIdx].push(cCurrentWiki);
+      addMasterScore(cCurrentTeamIdx, '명화 퍼즐 · ' + cCurrentPainting.level, puzzleScore);
+    }else{
+      // 재플레이 기록은 득점하지 않지만 완료 상태는 그대로 유지합니다.
+      saveArcadeState();
     }
-    addMasterScore(cCurrentTeamIdx, '명화 퍼즐', 5);
+
+    $('cSolvedHeadline').textContent = firstScore
+      ? ('완성! +' + puzzleScore + '점')
+      : '완성! · 재플레이';
     $('cSolvedTime').textContent = '완성 시간: ' + fmt(cElapsed) + ' · 이동 ' + cMoveCount + '회';
     $('cSolvedOverlay').style.display = 'flex';
     $('cCompleteStrip').style.display = 'block';
-    $('cCompleteStrip').textContent = cTeams[cCurrentTeamIdx].name + ' · ' + cCurrentPainting.title + ' 완성! +5점';
+
+    if(firstScore){
+      $('cCompleteStrip').textContent =
+        cTeams[cCurrentTeamIdx].name + ' · ' + cCurrentPainting.title + ' 첫 완성! '
+        + cCurrentPainting.level + ' +' + puzzleScore + '점';
+    }else{
+      $('cCompleteStrip').textContent =
+        cTeams[cCurrentTeamIdx].name + ' · ' + cCurrentPainting.title +
+        ' 재완성 · 이미 득점한 작품이라 추가 점수는 없습니다.';
+    }
+
     renderCPlayScoreBar();
     renderCPlayGallery();
+    renderCGallery();
   }
 
   $('cHintBtn').addEventListener('click', function(){
@@ -1496,7 +1631,7 @@
 
   function renderDMemGrid(){
     var grid = $('dMemGrid');
-    grid.style.gridTemplateColumns = 'repeat(6, minmax(58px, 88px))';
+    grid.style.gridTemplateColumns = 'repeat(6, minmax(82px, 128px))';
     grid.style.justifyContent = 'center';
     grid.innerHTML = "";
     dMemDeck.forEach(function(card, idx){
@@ -1578,6 +1713,109 @@
     var v = parseInt($('cfgTimerMinutes').value,10);
     if(!isNaN(v) && v>=1) sharedConfig.timerMinutes = v;
   });
+
+
+  // ---- teacher tab: independent backup manual scoreboard ----
+  var eBackupScores = [0,0,0,0,0,0];
+
+  function renderEBackupScores(){
+    var grid = $('eBackupScoreGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    eBackupScores.forEach(function(v,i){
+      var row = document.createElement('div');
+      row.className = 'backup-row';
+
+      var name = document.createElement('div');
+      name.className = 'backup-name';
+      name.textContent = (i+1) + '조';
+
+      var value = document.createElement('div');
+      value.className = 'backup-value';
+      value.textContent = Math.round(v*10)/10;
+
+      var btns = document.createElement('div');
+      btns.className = 'backup-btns';
+
+      function makeBtn(txt,delta,cls){
+        var b = document.createElement('button');
+        b.className = 'backup-btn ' + cls;
+        b.textContent = txt;
+        b.addEventListener('click', function(){
+          eBackupScores[i] += delta;
+          renderEBackupScores();
+        });
+        return b;
+      }
+
+      btns.appendChild(makeBtn('−1',-1,'minus'));
+      btns.appendChild(makeBtn('+1',1,'plus'));
+      btns.appendChild(makeBtn('+3',3,'plus'));
+
+      row.appendChild(name);
+      row.appendChild(value);
+      row.appendChild(btns);
+      grid.appendChild(row);
+    });
+  }
+
+  $('eBackupResetBtn').addEventListener('click', function(){
+    eBackupScores = [0,0,0,0,0,0];
+    renderEBackupScores();
+  });
+
+  // ---- teacher tab: stopwatch (count up) ----
+  var eStopwatchElapsed = 0;
+  var eStopwatchStartedAt = 0;
+  var eStopwatchId = null;
+  var eStopwatchRunning = false;
+
+  function eFmtStopwatch(ms){
+    ms = Math.max(0,ms);
+    var totalTenths = Math.floor(ms/100);
+    var tenths = totalTenths % 10;
+    var totalSec = Math.floor(totalTenths/10);
+    var sec = totalSec % 60;
+    var min = Math.floor(totalSec/60);
+    return (min<10?'0':'')+min+':' + (sec<10?'0':'')+sec + '.' + tenths;
+  }
+
+  function eUpdateStopwatch(){
+    var elapsed = eStopwatchElapsed;
+    if(eStopwatchRunning) elapsed += performance.now() - eStopwatchStartedAt;
+    $('eStopwatchText').textContent = eFmtStopwatch(elapsed);
+  }
+
+  function eStartStopwatch(){
+    if(eStopwatchRunning) return;
+    eStopwatchRunning = true;
+    eStopwatchStartedAt = performance.now();
+    $('eStopwatchRunBtn').textContent = '일시정지';
+    eStopwatchId = setInterval(eUpdateStopwatch,100);
+  }
+
+  function ePauseStopwatch(){
+    if(!eStopwatchRunning) return;
+    eStopwatchElapsed += performance.now() - eStopwatchStartedAt;
+    eStopwatchRunning = false;
+    if(eStopwatchId){ clearInterval(eStopwatchId); eStopwatchId=null; }
+    $('eStopwatchRunBtn').textContent = '시작';
+    eUpdateStopwatch();
+  }
+
+  $('eStopwatchRunBtn').addEventListener('click', function(){
+    if(eStopwatchRunning) ePauseStopwatch(); else eStartStopwatch();
+  });
+
+  $('eStopwatchResetBtn').addEventListener('click', function(){
+    if(eStopwatchRunning) ePauseStopwatch();
+    eStopwatchElapsed = 0;
+    eUpdateStopwatch();
+  });
+
+  renderEBackupScores();
+  eUpdateStopwatch();
+
 
   // ---- teacher tab: overall countdown timer ----
   var eTimeLeft = sharedConfig.timerMinutes * 60;
@@ -1714,6 +1952,7 @@
     if(eLog.length === 0) return;
     var last = eLog.pop();
     eTeams[last.teamIdx].score -= last.delta;
+    saveArcadeState();
     renderETeamList();
     renderELog();
   });
