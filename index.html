@@ -1,0 +1,2540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>학기초 활동 진행 도구</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0C10; --panel:#15171E; --panel2:#1C1F29; --panel-line:#282B36;
+    --text:#F5F5F0; --muted:#8A8D98; --accent:#FF5F5F; --danger:#FF3B3B;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:'Noto Sans KR', system-ui, sans-serif; overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:none; }
+  #app{ position:relative; width:100vw; height:100vh; height:100dvh; }
+  #app::before{ content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background: radial-gradient(circle at 15% 20%, rgba(255,255,255,0.035), transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255,255,255,0.03), transparent 45%); }
+  .screen{ position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; padding: clamp(16px,3vw,40px); overflow-y:auto; }
+  .screen[hidden]{ display:none; }
+  .disp{ font-family:'Do Hyeon',sans-serif; font-weight:400; }
+
+  .home-back{ position:absolute; top:clamp(14px,2vw,28px); left:clamp(14px,2vw,28px); z-index:5;
+    background:var(--panel); border:1px solid var(--panel-line); color:var(--muted);
+    padding:8px 14px; border-radius:10px; font-size:13px; cursor:pointer; }
+  .home-back:hover{ color:var(--text); }
+
+  /* ---- HOME ---- */
+  #screen-home{ align-items:center; justify-content:center; text-align:center; }
+  #screen-home h1{ font-size:clamp(28px,6vw,44px); margin:0 0 6px; }
+  #screen-home p.sub{ color:var(--muted); font-size:14px; margin:0 0 34px; }
+  .menu-grid{ display:flex; gap:20px; flex-wrap:wrap; justify-content:center; max-width:700px; }
+  .menu-card{
+    width:260px; background:var(--panel); border:2px solid var(--panel-line); border-radius:20px;
+    padding:28px 22px; cursor:pointer; transition:border-color .2s ease, transform .15s ease; text-align:left;
+  }
+  .menu-card:hover{ transform:translateY(-4px); }
+  .menu-card.a:hover{ border-color:#FFB454; }
+  .menu-card.b:hover{ border-color:#4FD9C6; }
+  .menu-card.c:hover{ border-color:#B18CFF; }
+  .menu-card.d:hover{ border-color:#FF8FD8; }
+  .menu-card.e:hover{ border-color:#FFC145; }
+  .menu-card.f:hover{ border-color:#5FD9FF; }
+  .menu-card.g:hover{ border-color:#FF6B9D; }
+  .menu-card.h:hover{ border-color:#D2A679; }
+  .menu-card.i:hover{ border-color:#8CE99A; }
+  .menu-card.j:hover{ border-color:#FFB454; }
+
+  .teacher-btn{
+    position:absolute; top:clamp(14px,2vw,26px); right:clamp(14px,2vw,26px); z-index:5;
+    background:var(--panel); border:1.5px solid var(--panel-line); color:var(--muted);
+    padding:9px 16px; border-radius:12px; font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  .teacher-btn:hover{ border-color:#FFC145; color:#FFC145; }
+  .menu-card .icon{ font-size:36px; margin-bottom:12px; }
+  .menu-card h2{ font-size:20px; margin:0 0 8px; }
+  .menu-card p{ color:var(--muted); font-size:13px; margin:0; line-height:1.5; }
+
+  /* ---- shared setup styles ---- */
+  .setup-wrap{ width:100%; max-width:640px; margin:0 auto; padding-bottom:24px; }
+  .brand{ text-align:center; margin: clamp(4px,2vh,18px) 0 6px; }
+  .brand .kicker{ font-size:12px; letter-spacing:.3em; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .brand h1{ font-size:clamp(26px,5.5vw,42px); margin:6px 0 2px; }
+  .brand h1 span{ color:var(--accent); }
+  .brand p{ color:var(--muted); font-size:13px; margin:0; }
+
+  .field-row{ display:flex; gap:10px; margin:12px 0; align-items:center;
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:14px; padding:10px 16px; }
+  .field-row label{ font-size:13px; color:var(--muted); white-space:nowrap; font-weight:700; }
+  .field-row input[type=number]{ width:64px; background:var(--panel2); border:1px solid var(--panel-line); border-radius:8px;
+    color:var(--text); font-size:15px; text-align:center; padding:8px 4px; outline:none; font-family:inherit; }
+  .field-row span.unit{ color:var(--muted); font-size:13px; }
+  .field-row input[type=file]{ color:var(--muted); font-size:13px; }
+
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin:20px 0 8px; }
+  .section-head h2{ font-size:17px; margin:0; }
+
+  .chip-list{ display:flex; flex-direction:column; gap:7px; }
+  .chip-card{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:11px; padding:8px 11px; }
+  .chip-card input[type=text]{ background:transparent; border:none; color:var(--text); font-size:13.5px; font-weight:500; outline:none; font-family:inherit; }
+  .chip-del{ background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; width:26px; height:26px; border-radius:7px; }
+  .chip-del:hover{ background:#291a1a; color:var(--danger); }
+  .add-row{ display:flex; justify-content:center; margin-top:8px; }
+  .btn-ghost{ background:none; border:1.5px dashed var(--panel-line); color:var(--muted); padding:8px 15px; border-radius:11px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .start-cta{ display:flex; justify-content:center; margin-top:24px; gap:10px; flex-wrap:wrap; }
+  .btn-primary{ font-size:20px; letter-spacing:.02em; background:var(--accent); color:#0B0C10; border:none;
+    padding:15px 42px; border-radius:16px; cursor:pointer; box-shadow:0 8px 24px -8px rgba(255,95,95,.4); font-family:'Do Hyeon',sans-serif;}
+  .btn-primary:active{ transform:translateY(1px); }
+  .btn-primary:disabled{ opacity:.35; cursor:not-allowed; box-shadow:none; }
+
+  .info-banner{
+    background:var(--panel2); border:1px solid var(--panel-line); border-left:4px solid var(--accent);
+    border-radius:12px; padding:12px 16px; font-size:13px; color:var(--muted); max-width:600px; margin:0 auto 18px;
+    text-align:center;
+  }
+
+  /* ---- draw / spread ---- */
+  .draw-screen{ align-items:center; justify-content:flex-start; text-align:center; padding-top:clamp(20px,4vh,40px); }
+  .turn-badge{ font-size:13px; letter-spacing:.2em; color:var(--muted); font-weight:700; text-transform:uppercase; margin-bottom:6px; }
+  .turn-name{ font-size:clamp(24px,5vw,36px); margin:0 0 22px; }
+  .spread-grid{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:640px; margin-bottom:22px; }
+  .spread-card{ width:84px; height:112px; border-radius:14px; background:var(--panel); border:2px solid var(--panel-line);
+    display:flex; align-items:center; justify-content:center; font-size:26px; color:var(--muted); cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, color .15s ease; }
+  .spread-card:hover{ transform:translateY(-6px) scale(1.03); border-color:var(--accent); color:var(--accent); }
+  .reveal-card{ display:none; }
+  .reveal-card.show{ display:flex; flex-direction:column; align-items:center; width:min(88vw,340px); border-radius:22px;
+    padding:28px 24px; background:var(--panel); border:2px solid var(--accent); animation:cardPop .4s cubic-bezier(.2,1.4,.4,1); margin-bottom:18px; }
+  @keyframes cardPop{ from{ transform:scale(.7) rotate(-3deg); opacity:0;} to{ transform:scale(1) rotate(0); opacity:1;} }
+  .reveal-eyebrow{ font-size:11px; letter-spacing:.22em; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .reveal-title{ font-size:clamp(28px,6vw,40px); color:var(--accent); margin:10px 0; }
+  .confirm-btn{ font-size:16px; background:var(--panel2); color:var(--text); border:1px solid var(--panel-line);
+    padding:12px 28px; border-radius:12px; cursor:pointer; margin-top:4px; font-family:'Do Hyeon',sans-serif;}
+  .confirm-btn.primary{ background:var(--accent); color:#0B0C10; border:none; }
+  .drawn-log{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:24px; max-width:640px; }
+  .drawn-chip{ font-size:12px; background:var(--panel); border:1px solid var(--panel-line); border-radius:999px; padding:6px 12px; color:var(--muted); }
+  .drawn-chip b{ color:var(--text); }
+
+  /* ---- build / timer ---- */
+  .play-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px,2vh,20px); text-align:center; min-height:0; }
+  .ring-wrap{ position:relative; width:min(42vh,300px); height:min(42vh,300px); }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:var(--panel2); stroke-width:14; }
+  .ring-fg{ fill:none; stroke:var(--accent); stroke-width:14; stroke-linecap:round; transition:stroke-dashoffset .18s linear, stroke .3s ease; }
+  .ring-fg.danger{ stroke:var(--danger); animation:pulseRing .6s ease-in-out infinite; }
+  @keyframes pulseRing{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+  .ring-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  .timer-text{ font-size:clamp(38px,8vh,64px); line-height:1; font-variant-numeric:tabular-nums; font-family:'Do Hyeon',sans-serif; }
+  .timer-text.danger{ color:var(--danger); }
+  .timer-sub{ font-size:12px; color:var(--muted); letter-spacing:.06em; max-width:320px; }
+  .play-controls{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-top:6px; }
+  .time-adjust-row{ display:flex; gap:8px; justify-content:center; padding-top:10px; }
+  .btn-adjust{ font-size:12.5px; font-weight:700; background:var(--panel); color:var(--muted); border:1px solid var(--panel-line);
+    border-radius:10px; padding:8px 13px; cursor:pointer; }
+  .btn-adjust:hover{ color:var(--text); border-color:var(--muted); }
+  .btn{ font-size:15.5px; border:none; border-radius:14px; padding:13px 24px; cursor:pointer; font-family:'Do Hyeon',sans-serif;}
+  .btn-run{ background:var(--accent); color:#0B0C10; min-width:140px; }
+  .btn-sub{ background:var(--panel); color:var(--text); border:1px solid var(--panel-line); }
+  .btn-sub:hover{ border-color:var(--muted); }
+  .btn:active{ transform:translateY(1px); }
+  .mini-timer{ font-size:clamp(36px,9vw,64px); font-family:'Do Hyeon',sans-serif; margin-bottom:18px; text-align:center; }
+
+  /* ---- gallery ---- */
+  .gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; margin-bottom:6px; }
+  .gallery-card{ background:var(--panel); border:2px solid var(--panel-line); border-radius:12px; overflow:hidden; cursor:pointer; text-align:center; transition:border-color .15s ease; }
+  .gallery-card.solved{ opacity:.4; cursor:not-allowed; border-color:#8CE99A; }
+  .gallery-card:hover{ border-color:var(--accent); }
+  .gallery-card.selected{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(79,217,198,.25); }
+  .gallery-thumb{ width:100%; height:78px; object-fit:cover; display:block; background:var(--panel2); }
+  .gallery-fallback{ width:100%; height:78px; display:flex; align-items:center; justify-content:center; background:var(--panel2); color:var(--muted); font-size:10px; padding:4px; text-align:center; }
+  .gallery-title{ font-size:11px; padding:5px 4px 3px; font-weight:700; }
+  .gallery-level{ font-size:9.5px; color:var(--muted); padding-bottom:5px; }
+
+
+  /* ---- 명화 퍼즐 : 데스크톱 게임 보드 레이아웃 ---- */
+  .puzzle-app-shell{
+    width:min(96vw,1500px); margin:0 auto; display:grid;
+    grid-template-columns:minmax(520px,1.35fr) minmax(280px,.72fr) minmax(330px,.9fr);
+    gap:16px; align-items:start;
+  }
+  .puzzle-panel{
+    background:linear-gradient(180deg,#161922,#11131a);
+    border:1px solid var(--panel-line); border-radius:18px; padding:16px;
+    box-shadow:0 12px 32px rgba(0,0,0,.18);
+  }
+  .puzzle-main-panel{ min-width:0; }
+  .puzzle-side-panel{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .puzzle-gallery-panel{ min-width:0; max-height:calc(100vh - 150px); overflow:auto; }
+  .puzzle-topline{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:12px; flex-wrap:wrap;
+  }
+  .puzzle-stat-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .puzzle-stat{
+    display:flex; align-items:baseline; gap:6px; padding:8px 12px;
+    border-radius:11px; background:var(--panel2); border:1px solid var(--panel-line);
+  }
+  .puzzle-stat span{ color:var(--muted); font-size:11px; font-weight:700; }
+  .puzzle-stat b{ font-family:'Do Hyeon',sans-serif; font-size:22px; }
+  .puzzle-board-wrap{ position:relative; width:100%; aspect-ratio:1; margin:0 auto; }
+  .puzzle-toolbar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .puzzle-info-card{
+    background:var(--panel2); border:1px solid var(--panel-line); border-radius:14px;
+    padding:14px;
+  }
+  .puzzle-info-card h3{ margin:0 0 8px; font-size:16px; }
+  .puzzle-reference{
+    width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px;
+    background:#20232d; display:block; margin:8px 0 10px;
+  }
+  .puzzle-work-title{ font-family:'Do Hyeon',sans-serif; font-size:22px; color:var(--accent); margin:3px 0; }
+  .puzzle-work-artist{ color:var(--text); font-size:13px; font-weight:700; }
+  .puzzle-work-meta{ color:var(--muted); font-size:12px; line-height:1.55; margin-top:5px; }
+  .puzzle-help{ margin:0; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.65; }
+  .puzzle-gallery-head{ margin-bottom:10px; }
+  .puzzle-gallery-head h2{ margin:0; font-size:18px; }
+  .puzzle-gallery-head p{ color:var(--muted); font-size:11px; margin:4px 0 0; }
+  .puzzle-play-gallery{
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;
+  }
+  .puzzle-play-gallery .gallery-card{ border-radius:10px; }
+  .puzzle-play-gallery .gallery-thumb{ height:78px; }
+  .puzzle-play-gallery .gallery-title{ font-size:10px; line-height:1.25; min-height:31px; display:flex; align-items:center; justify-content:center; }
+  .puzzle-play-gallery .gallery-level{ font-size:9px; }
+  .puzzle-complete-strip{
+    margin-top:12px; border:1px solid rgba(140,233,154,.3); background:rgba(140,233,154,.08);
+    border-radius:12px; padding:10px 13px; color:#b7f1c1; font-size:12px; display:none;
+  }
+  @media (max-width:1100px){
+    .puzzle-app-shell{ grid-template-columns:minmax(480px,1.25fr) minmax(300px,.75fr); }
+    .puzzle-gallery-panel{ grid-column:1/-1; max-height:none; }
+    .puzzle-play-gallery{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+  }
+  @media (max-width:760px){
+    .puzzle-app-shell{ grid-template-columns:1fr; width:min(96vw,620px); }
+    .puzzle-play-gallery{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .puzzle-gallery-panel{ max-height:none; }
+  }
+
+  /* ---- jigsaw puzzle ---- */
+  .puzzle-tile{ background-repeat:no-repeat; cursor:pointer; border:2px solid transparent; transition:border-color .1s ease, filter .1s ease; }
+  .puzzle-tile:hover{ filter:brightness(1.08); }
+  .puzzle-tile.selected{ border-color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent); }
+
+  /* ---- team scoreboard bar ---- */
+  .score-bar{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+  .score-chip{ background:var(--panel); border:1.5px solid var(--panel-line); border-radius:12px; padding:8px 14px; text-align:center; min-width:64px; }
+  .score-chip.current{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(255,143,216,.2); }
+  .score-chip .sc-name{ font-size:12px; color:var(--muted); font-weight:700; }
+  .score-chip .sc-val{ font-family:'Do Hyeon',sans-serif; font-size:20px; color:var(--text); }
+  .score-chip.current .sc-val{ color:var(--accent); }
+
+  /* ---- direct team selector ---- */
+  .team-tabs{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:6px auto 14px; width:100%; max-width:620px; }
+  .team-tab{ min-width:72px; padding:10px 15px; border-radius:12px; border:1.5px solid var(--panel-line);
+    background:var(--panel); color:var(--muted); font-family:'Do Hyeon',sans-serif; font-size:16px; cursor:pointer; }
+  .team-tab:hover{ border-color:var(--accent); color:var(--text); }
+  .team-tab.active{ background:var(--accent); border-color:var(--accent); color:#0B0C10; }
+  .team-tab:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .puzzle-hint-overlay{ position:absolute; inset:0; z-index:5; display:none; border-radius:12px; overflow:hidden;
+    background:var(--panel2); align-items:center; justify-content:center; }
+  .puzzle-hint-overlay.show{ display:flex; }
+  .puzzle-hint-overlay img{ width:100%; height:100%; object-fit:cover; }
+  .hint-count{ font-size:12px; color:var(--muted); margin-top:4px; text-align:center; }
+
+  /* ---- memory match ---- */
+  .mem-grid{ display:grid; gap:6px; margin:0 auto; width:fit-content; max-width:94vw; justify-content:center; align-content:center; }
+  .mem-card{ aspect-ratio:1/1; border-radius:7px; background:var(--panel2); border:2px solid var(--panel-line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:clamp(11px,2vw,18px); color:var(--muted);
+    background-size:cover; background-position:center; transition:transform .15s ease; }
+  .mem-card:hover{ transform:translateY(-3px); }
+  .mem-card.matched{ border-color:#8CE99A; cursor:default; opacity:.85; }
+  .mem-card.matched:hover{ transform:none; }
+
+
+  /* ---- 조 선택은 별도 탭 없이 스코어 버튼으로 통일 ---- */
+  .team-tabs{ display:none !important; }
+  .score-chip.selectable{ cursor:pointer; appearance:none; font-family:inherit; color:inherit; }
+  .score-chip.selectable:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .score-chip.selectable:disabled{ cursor:not-allowed; opacity:.58; transform:none; }
+
+  /* ---- final ranking ---- */
+  .rank-list{ display:flex; flex-direction:column; gap:8px; width:100%; max-width:420px; }
+  .rank-row{ display:flex; justify-content:space-between; align-items:center; background:var(--panel); border:1px solid var(--panel-line);
+    border-radius:12px; padding:12px 18px; }
+  .rank-row.first{ border-color:#FFC145; }
+  .rank-row .rk-name{ font-weight:700; font-size:15px; }
+  .rank-row .rk-score{ font-family:'Do Hyeon',sans-serif; font-size:20px; color:var(--accent); }
+
+  /* ---- E: live scoreboard ---- */
+  .activity-tabs{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
+  .activity-tab{ background:var(--panel); border:1.5px solid var(--panel-line); color:var(--muted);
+    padding:8px 16px; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer; }
+  .activity-tab.active{ background:var(--accent); color:#0B0C10; border-color:var(--accent); }
+
+  .team-score-list{ display:flex; flex-direction:column; gap:10px; width:100%; max-width:560px; margin:0 auto; }
+  .team-score-row{ display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--panel-line);
+    border-radius:14px; padding:12px 16px; }
+  .team-score-row .ts-name{ flex:1; font-weight:700; font-size:15px; }
+  .team-score-row .ts-score{ font-family:'Do Hyeon',sans-serif; font-size:26px; min-width:44px; text-align:center; }
+  .ts-btns{ display:flex; gap:6px; }
+  .ts-btn{ width:34px; height:34px; border-radius:9px; border:1px solid var(--panel-line); background:var(--panel2);
+    color:var(--text); font-size:15px; font-weight:700; cursor:pointer; }
+  .ts-btn:hover{ border-color:var(--accent); }
+  .ts-btn.plus{ color:#8CE99A; }
+  .ts-btn.minus{ color:#FF7A7A; }
+
+  .score-log{ width:100%; max-width:560px; margin:18px auto 0; }
+  .score-log-title{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; }
+  .score-log-list{ display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto; }
+  .score-log-item{ font-size:12.5px; color:var(--muted); background:var(--panel); border-radius:8px; padding:6px 10px; }
+  .score-log-item b{ color:var(--text); }
+  .undo-btn{ display:block; margin:10px auto 0; background:var(--panel); border:1px solid var(--panel-line); color:var(--muted);
+    padding:8px 16px; border-radius:10px; font-size:12.5px; cursor:pointer; }
+  .undo-btn:hover{ color:var(--text); }
+  .e-timer-block{ background:var(--panel); border:1px solid var(--panel-line); border-radius:16px; padding:16px; text-align:center; max-width:360px; margin:0 auto 20px; }
+  .e-timer-text{ font-family:'Do Hyeon',sans-serif; font-size:40px; margin-bottom:8px; font-variant-numeric:tabular-nums; }
+
+  /* ---- F: 물감 혼색 게임 ---- */
+  .color-boxes{ display:flex; gap:16px; justify-content:center; margin:14px 0 10px; }
+  .color-box{ width:min(34vw,210px); height:min(24vw,145px); border-radius:18px; border:2px solid var(--panel-line); box-shadow:inset 0 0 26px rgba(255,255,255,.08); }
+  .color-label{ text-align:center; font-size:11px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-top:6px; }
+
+  .paint-wheel-wrap{ display:flex; flex-direction:column; align-items:center; margin:4px auto 14px; }
+  .paint-wheel{ position:relative; width:190px; height:190px; border-radius:50%;
+    background:conic-gradient(from -30deg,
+      #e53935 0deg 60deg, #ef7d22 60deg 120deg, #f6c92e 120deg 180deg,
+      #43a75d 180deg 240deg, #3569d4 240deg 300deg, #8647ad 300deg 360deg);
+    box-shadow:0 8px 24px rgba(0,0,0,.28), inset 0 0 0 8px rgba(255,255,255,.05); }
+  .paint-wheel::after{ content:""; position:absolute; inset:43px; border-radius:50%; background:var(--panel2);
+    box-shadow:inset 0 0 0 1px var(--panel-line); }
+  .paint-wheel-center{ position:absolute; z-index:2; width:70px; height:70px; left:60px; top:60px; border-radius:50%;
+    border:4px solid rgba(255,255,255,.78); box-shadow:0 5px 16px rgba(0,0,0,.35); background:#eee8d8; transition:background .2s; }
+  .wheel-label{ position:absolute; z-index:3; font-size:10px; font-weight:900; color:#fff; text-shadow:0 1px 4px #000; }
+  .wheel-r{ top:9px; left:78px; } .wheel-o{ top:43px; right:10px; } .wheel-y{ bottom:40px; right:11px; }
+  .wheel-g{ bottom:8px; left:78px; } .wheel-b{ bottom:40px; left:12px; } .wheel-v{ top:43px; left:8px; }
+  .paint-wheel-caption{ margin-top:8px; color:var(--muted); font-size:11px; text-align:center; line-height:1.6; }
+
+  .paint-station{ width:min(92vw,620px); background:var(--panel); border:1px solid var(--panel-line); border-radius:18px; padding:14px 16px; margin:8px auto 2px; }
+  .paint-help{ text-align:center; color:var(--muted); font-size:12px; margin-bottom:10px; }
+  .paint-buttons{ display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+  .paint-btn{ position:relative; border:1px solid var(--panel-line); border-radius:14px; padding:12px 8px 10px; background:var(--panel2); color:var(--text); cursor:pointer; font-family:inherit; font-weight:800; }
+  .paint-btn:hover{ transform:translateY(-2px); border-color:var(--accent); }
+  .paint-drop{ width:38px; height:38px; margin:0 auto 7px; border-radius:55% 45% 55% 45%; transform:rotate(45deg); box-shadow:inset -8px -8px 12px rgba(0,0,0,.16), inset 5px 5px 8px rgba(255,255,255,.18); }
+  .paint-drop.red{ background:#e53935; } .paint-drop.yellow{ background:#f6c92e; } .paint-drop.blue{ background:#3569d4; } .paint-drop.white{ background:#f4f1e8; border:1px solid #aaa; } .paint-drop.black{ background:#252525; }
+  .paint-count{ display:block; margin-top:4px; font-family:'Do Hyeon',sans-serif; font-size:18px; color:var(--accent); }
+  .mix-bowl{ width:min(42vw,250px); height:92px; margin:10px auto 4px; border-radius:10px 10px 48% 48% / 10px 10px 70% 70%; border:3px solid #777; border-top-color:#aaa; position:relative; overflow:hidden; background:#3b3b3b; box-shadow:0 8px 20px rgba(0,0,0,.3), inset 0 5px 12px rgba(255,255,255,.08); }
+  .mix-liquid{ position:absolute; left:8px; right:8px; bottom:7px; height:68px; border-radius:8px 8px 50% 50% / 8px 8px 70% 70%; transition:background .22s ease; box-shadow:inset 0 8px 14px rgba(255,255,255,.16); }
+  @media (max-width:680px){ .paint-buttons{ grid-template-columns:repeat(3,1fr); } }
+  .mix-ratio{ text-align:center; font-size:12px; color:var(--muted); min-height:18px; }
+  .f-feedback{ text-align:center; font-family:'Do Hyeon',sans-serif; font-size:20px; min-height:30px; margin-top:6px; }
+  .f-feedback.success{ color:#8CE99A; }
+  .f-feedback.fail{ color:var(--muted); }
+
+  /* ---- G: 절대색감 ---- */
+  .g-hud{ display:flex; justify-content:space-between; align-items:center; width:min(90vw,480px); margin:6px auto 10px; }
+  .g-level-badge{ background:var(--panel); border:1.5px solid var(--accent); border-radius:12px; padding:6px 14px; font-size:11px; color:var(--muted); }
+  .g-level-badge span{ display:block; letter-spacing:.15em; }
+  .g-level-badge b{ font-family:'Do Hyeon',sans-serif; font-size:20px; color:var(--text); }
+  .g-score-num{ font-family:'Do Hyeon',sans-serif; font-size:30px; color:var(--text); }
+  .g-timerbar-track{ width:min(90vw,480px); height:10px; border-radius:999px; background:var(--panel2); margin:0 auto 7px; overflow:hidden; }
+  .g-timerbar-fill{ height:100%; width:100%; background:linear-gradient(to right, #5FD9FF, #B18CFF); border-radius:999px; transition:width .08s linear; }
+  .g-penalty-note{ font-size:11px; color:var(--muted); min-height:18px; text-align:center; margin-bottom:8px; }
+  .g-penalty-note.flash{ color:#FF7A7A; animation:gPenaltyFlash .45s ease; }
+  @keyframes gPenaltyFlash{ 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+  .g-grid{ display:grid; gap:3px; width:min(68vh,420px); aspect-ratio:1; margin:0 auto; }
+  .g-tile{ border-radius:6px; cursor:pointer; }
+  .g-tile.wrong{ outline:3px solid #FF6B6B; animation:gWrong .3s ease; }
+  @keyframes gWrong{ 0%,100%{transform:translateX(0)} 33%{transform:translateX(-4px)} 66%{transform:translateX(4px)} }
+  .g-overlay{ position:absolute; inset:0; background:rgba(11,12,16,.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:6; border-radius:16px; }
+
+  /* ---- H: 도자기 빚기 : 큰 물레 작업대 ---- */
+  .h-workbench{ width:min(98vw,980px); display:grid; grid-template-columns:repeat(2,minmax(300px,430px)); gap:18px; align-items:start; justify-content:center; margin:4px auto 0; }
+  .h-target-card{ background:none; border:none; padding:0; text-align:center; }
+  .h-target-card .h-stage{ width:min(58vh,390px); min-width:300px; margin:0 auto; }
+  .h-stage{ width:min(70vw,360px); aspect-ratio:2/3; position:relative; border-radius:22px; overflow:hidden; background:radial-gradient(circle at 18% 18%, rgba(171,255,76,.28), transparent 19%), radial-gradient(circle at 82% 28%, rgba(94,196,72,.22), transparent 24%), radial-gradient(circle at 70% 76%, rgba(170,225,80,.16), transparent 20%), linear-gradient(145deg,#183326 0%,#10251c 45%,#17201c 100%); box-shadow:inset 0 0 50px rgba(0,0,0,.48), 0 16px 36px rgba(0,0,0,.28); }
+  .h-stage.main{ width:min(58vh,390px); min-width:300px; }
+  .h-stage svg{ width:100%; height:100%; display:block; }
+  .h-stage-label{ font-size:11px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-top:8px; }
+  .h-target-fill{ fill:url(#hTargetGrad); opacity:.74; stroke:#d6b899; stroke-width:1.3; }
+  .h-target-outline{ fill:none; stroke:#FFE4C4; stroke-width:2; stroke-dasharray:6 5; opacity:0; pointer-events:none; }
+  .h-target-outline.show{ opacity:.7; }
+  .h-clay-path{ fill:url(#hClayGrad); stroke:#7e5538; stroke-width:1.5; filter:url(#hClayShadow); }
+  .h-ridge{ stroke:rgba(255,238,210,.20); stroke-width:1.1; fill:none; pointer-events:none; }
+  .h-wheel-top{ fill:url(#hWheelGrad); stroke:#675a4f; stroke-width:2; }
+  .h-wheel-base{ fill:#393632; stroke:#5d554d; stroke-width:2; }
+  .h-wheel-spin{ transform:none; }
+  .h-wheel-motion{ fill:none; stroke:#cfc5bb; stroke-width:2; opacity:.42; stroke-dasharray:18 11; }
+  .h-wheel-spin.spinning .h-wheel-motion{ animation:hWheelFlow .58s linear infinite; }
+  @keyframes hWheelFlow{ to{ stroke-dashoffset:-58; } }
+  .h-tools{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .h-tool-btn{ background:var(--panel); color:var(--muted); border:1px solid var(--panel-line); border-radius:10px; padding:8px 12px; font-size:12px; cursor:pointer; }
+  .h-tool-btn.active{ color:var(--text); border-color:var(--accent); background:var(--panel2); }
+  .h-quality{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:7px; font-size:11px; color:var(--muted); }
+  .h-quality span{ background:var(--panel); border:1px solid var(--panel-line); border-radius:999px; padding:5px 9px; }
+  @media (max-width:760px){ .h-workbench{ grid-template-columns:1fr; } .h-target-card{ display:none; } .h-stage.main{ min-width:270px; width:min(78vw,390px); } }
+
+
+  @media (max-width:760px){
+    .h-workbench{ grid-template-columns:1fr; width:min(96vw,430px); }
+    .h-target-card .h-stage, .h-stage.main{ width:min(82vw,390px); min-width:0; }
+  }
+
+
+  /* ---- I: 색 순서 기억 ---- */
+  .simon-wrap{ width:min(88vw,520px); margin:18px auto; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .simon-pad{ aspect-ratio:1.2; border:none; border-radius:22px; cursor:pointer; opacity:.55; transition:transform .12s, opacity .12s, filter .12s; }
+  .simon-pad:active{ transform:scale(.97); }
+  .simon-pad.flash{ opacity:1; filter:brightness(1.65); transform:scale(1.03); box-shadow:0 0 28px currentColor; }
+  .simon-pad.red{ background:#e64a45; color:#e64a45; }
+  .simon-pad.yellow{ background:#f0c53b; color:#f0c53b; }
+  .simon-pad.blue{ background:#4278d6; color:#4278d6; }
+  .simon-pad.green{ background:#48a967; color:#48a967; }
+  .game-status{ font-family:'Do Hyeon',sans-serif; font-size:22px; text-align:center; min-height:34px; }
+
+  /* ---- J: 장애물 달리기 ---- */
+  .runner-shell{ width:min(94vw,900px); margin:12px auto; }
+  .runner-canvas{ width:100%; aspect-ratio:3.5/1; background:linear-gradient(#141923 0 72%,#20242c 72%); border:1px solid var(--panel-line); border-radius:16px; display:block; }
+  .runner-hud{ display:flex; justify-content:space-between; gap:12px; align-items:center; margin:8px 2px 12px; }
+  .runner-score{ font-family:'Do Hyeon',sans-serif; font-size:26px; }
+  .runner-help{ color:var(--muted); font-size:12px; text-align:center; margin:8px 0; }
+
+  @media (prefers-reduced-motion: reduce){ .ring-fg.danger{ animation:none; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= HOME ================= -->
+  <section id="screen-home" class="screen">
+    <button class="teacher-btn" id="goE">📊 교사용 스코어보드</button>
+    <h1 class="disp">학기초 미니게임 모음</h1>
+    <p class="sub">진행할 게임을 선택하세요</p>
+    <div class="menu-grid">
+      <div class="menu-card c" id="goC">
+        <div class="icon">🧩</div>
+        <h2 class="disp">명화 퍼즐 만들기</h2>
+        <p>익숙한 명화를 5×5로 맞추고, 원본 힌트 3회를 활용해 완성하기</p>
+      </div>
+      <div class="menu-card d" id="goD1">
+        <div class="icon">🃏</div>
+        <h2 class="disp">카드 뒤집기</h2>
+        <p>6×6 카드판에서 원하는 조를 선택해 짝 맞추기</p>
+      </div>
+      <div class="menu-card f" id="goF">
+        <div class="icon">🎨</div>
+        <h2 class="disp">색 맞추기</h2>
+        <p>빨강·노랑·파랑에 흰색·검정까지 섞어 목표 색 만들기</p>
+      </div>
+      <div class="menu-card g" id="goG">
+        <div class="icon">🔎</div>
+        <h2 class="disp">절대색감</h2>
+        <p>미묘하게 다른 색 타일을 시간 안에 찾아내는 게임</p>
+      </div>
+      <div class="menu-card h" id="goH">
+        <div class="icon">🏺</div>
+        <h2 class="disp">도자기 빚기</h2>
+        <p>물레 위 점토를 직접 밀고 당겨 목표 도자기 형태 빚기</p>
+      </div>
+      <div class="menu-card i" id="goI">
+        <div class="icon">🧠</div>
+        <h2 class="disp">색 순서 기억</h2>
+        <p>점등되는 색의 순서를 기억하고 그대로 따라 누르기</p>
+      </div>
+      <div class="menu-card j" id="goJ">
+        <div class="icon">🏃</div>
+        <h2 class="disp">미술실 장애물 달리기</h2>
+        <p>학생 픽셀 캐릭터로 미술용품 장애물을 피하며 최대 거리 기록하기</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= E: SETUP ================= -->
+  <section id="screen-e-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">교사 전용 · 실시간 기록</div>
+        <h1 class="disp">실시간 <span>스코어보드</span></h1>
+        <p>조별로 여러 활동을 동시에 진행하고, 선생님이 돌아다니며 점수만 기록해요.</p>
+      </div>
+
+      <div class="section-head"><h2 class="disp">⚙️ 게임 설정</h2><span class="sub">카드 뒤집기는 8×8 고정</span></div>
+      <div class="info-banner">카드 뒤집기: 8×8 · 총 64장 · 32쌍 고정</div>
+
+      <div class="section-head"><h2 class="disp">⏱ 전체 타이머</h2></div>
+      <div class="field-row"><label>시작 시간</label><input id="cfgTimerMinutes" type="number" min="1" max="90" value="20"><span class="unit">분</span></div>
+
+      <div class="section-head"><h2 class="disp">🏷️ 활동 목록</h2><span class="sub">탭으로 전환하며 기록</span></div>
+      <div id="eActivityList" class="chip-list"></div>
+      <div class="add-row"><button class="btn-ghost" id="eAddActivityBtn">+ 활동 추가</button></div>
+
+      <div class="start-cta"><button class="btn-primary" id="eSetupNextBtn">시작하기 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= E: MAIN SCOREKEEPER ================= -->
+  <section id="screen-e-main" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <button class="teacher-btn" id="eSettingsBtn">⚙️ 설정</button>
+
+    <div class="e-timer-block">
+      <div class="e-timer-text" id="eTimerText">20:00</div>
+      <div class="play-controls">
+        <button class="btn btn-run" id="eTimerRunBtn">시작</button>
+        <button class="btn btn-sub" id="eTimerResetBtn">↺ 다시</button>
+      </div>
+      <div class="time-adjust-row">
+        <button class="btn-adjust" id="eTimerMinusBtn">−1분</button>
+        <button class="btn-adjust" id="eTimerPlusBtn">+1분</button>
+      </div>
+    </div>
+
+    <div class="activity-tabs" id="eActivityTabs"></div>
+    <div class="team-score-list" id="eTeamList"></div>
+    <button class="undo-btn" id="eUndoBtn">↺ 방금 기록 취소</button>
+    <div class="score-log">
+      <div class="score-log-title">최근 기록</div>
+      <div class="score-log-list" id="eLogList"></div>
+    </div>
+    <div class="start-cta"><button class="btn-primary" id="eRankBtn">🏆 전체 순위 보기</button></div>
+  </section>
+
+  <!-- ================= E: RANK VIEW ================= -->
+  <section id="screen-e-rank" class="screen" hidden style="align-items:center; justify-content:center; text-align:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="disp" style="font-size:clamp(26px,5.5vw,40px); color:var(--accent); margin-bottom:18px;">현재 순위</div>
+    <div class="rank-list" id="eRankList"></div>
+    <button class="btn-primary" id="eBackToMainBtn" style="margin-top:22px;">기록으로 돌아가기</button>
+  </section>
+
+  <!-- ================= F: COLOR MIX SETUP ================= -->
+  <section id="screen-f-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">감산 혼합 · 색채 감각</div>
+        <h1 class="disp">물감 <span>색 맞추기</span></h1>
+        <p>빨강·노랑·파랑에 흰색과 검정을 더해 목표 색을 만드세요. 색상뿐 아니라 밝기와 탁한 정도까지 조절할 수 있습니다.</p>
+      </div>
+      <div class="info-banner">목표 색은 3원색 혼합 뒤 흰색(틴트) 또는 검정(셰이드)이 더해져 만들어집니다. 색상·명도 변화를 함께 관찰해 보세요.</div>
+      <div class="start-cta"><button class="btn-primary" id="fSetupNextBtn">게임 시작 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= F: COLOR MIX PLAY ================= -->
+  <section id="screen-f-play" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+
+    <div class="team-tabs" id="fTeamTabs"></div>
+    <div class="score-bar" id="fScoreBar"></div>
+
+    <div class="color-boxes">
+      <div><div class="color-box" id="fTargetBox"></div><div class="color-label">목표 색</div></div>
+      <div><div class="color-box" id="fAdjustBox"></div><div class="color-label">섞은 색</div></div>
+    </div>
+
+    <div class="paint-station">
+      <div class="paint-help">빨강·노랑·파랑으로 색상을 만들고, 흰색으로 밝게·검정으로 어둡게 조절하세요. 색상환 가운데에는 현재 혼합색이 표시됩니다.</div>
+
+      <div class="paint-wheel-wrap">
+        <div class="paint-wheel" aria-label="RYB 색상환">
+          <div class="paint-wheel-center" id="fWheelCenter" title="현재 섞인 색"></div>
+          <span class="wheel-label wheel-r">빨강</span>
+          <span class="wheel-label wheel-o">주황</span>
+          <span class="wheel-label wheel-y">노랑</span>
+          <span class="wheel-label wheel-g">초록</span>
+          <span class="wheel-label wheel-b">파랑</span>
+          <span class="wheel-label wheel-v">보라</span>
+        </div>
+        <div class="paint-wheel-caption">빨강+노랑 → 주황 · 노랑+파랑 → 초록 · 파랑+빨강 → 보라<br>+ 흰색 = 틴트(밝게) · + 검정 = 셰이드(어둡게)</div>
+      </div>
+
+      <div class="paint-buttons">
+        <button class="paint-btn" id="fAddRed"><span class="paint-drop red"></span>빨강<span class="paint-count" id="fRedCount">0방울</span></button>
+        <button class="paint-btn" id="fAddYellow"><span class="paint-drop yellow"></span>노랑<span class="paint-count" id="fYellowCount">0방울</span></button>
+        <button class="paint-btn" id="fAddBlue"><span class="paint-drop blue"></span>파랑<span class="paint-count" id="fBlueCount">0방울</span></button>
+        <button class="paint-btn" id="fAddWhite"><span class="paint-drop white"></span>흰색<span class="paint-count" id="fWhiteCount">0방울</span></button>
+        <button class="paint-btn" id="fAddBlack"><span class="paint-drop black"></span>검정<span class="paint-count" id="fBlackCount">0방울</span></button>
+      </div>
+      <div class="mix-bowl"><div class="mix-liquid" id="fMixLiquid"></div></div>
+      <div class="mix-ratio" id="fMixRatio">아직 물감을 넣지 않았어요.</div>
+    </div>
+
+    <div class="f-feedback" id="fFeedback"></div>
+    <div class="play-controls" style="margin-top:6px;">
+      <button class="btn btn-sub" id="fResetMixBtn">🚿 물통에 씻기</button>
+      <button class="btn btn-run" id="fCheckBtn">색 비교!</button>
+      <button class="btn btn-sub" id="fRankBtn">🏆 순위 보기</button>
+    </div>
+  </section>
+
+  <!-- ================= F: RANK VIEW ================= -->
+  <section id="screen-f-rank" class="screen" hidden style="align-items:center; justify-content:center; text-align:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="disp" style="font-size:clamp(26px,5.5vw,40px); color:var(--accent); margin-bottom:18px;">현재 순위</div>
+    <div class="rank-list" id="fRankList"></div>
+    <button class="btn-primary" id="fBackToPlayBtn" style="margin-top:22px;">게임으로 돌아가기</button>
+  </section>
+
+  <!-- ================= G: 절대색감 SETUP ================= -->
+  <section id="screen-g-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">색채 지각 · 순발력</div>
+        <h1 class="disp">절대<span>색감</span></h1>
+        <p>미묘하게 다른 색 타일 하나를 시간 안에 찾아내세요. 레벨이 오를수록 타일이 늘고 색 차이는 작아져요.</p>
+      </div>
+      <div class="start-cta"><button class="btn-primary" id="gSetupNextBtn">게임 시작 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= G: 절대색감 PLAY ================= -->
+  <section id="screen-g-play" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+
+    <div class="team-tabs" id="gTeamTabs"></div>
+    <div class="score-bar" id="gScoreBar"></div>
+
+    <div class="g-hud">
+      <div class="g-level-badge"><span>LEVEL</span><b id="gLevelNum">1</b></div>
+      <div class="g-score-num" id="gScoreNum">0.0</div>
+    </div>
+    <div class="g-timerbar-track"><div class="g-timerbar-fill" id="gTimerFill"></div></div>
+    <div class="g-penalty-note" id="gPenaltyNote">오답을 눌러도 끝나지 않지만 남은 시간이 1.5초 줄어듭니다.</div>
+
+    <div id="gGrid" class="g-grid"></div>
+
+    <div id="gIdleOverlay" class="g-overlay">
+      <div class="disp" style="font-size:22px; margin-bottom:14px;" id="gIdleText">준비되면 시작하세요</div>
+      <button class="btn-primary" id="gStartBtn">시작 ▶</button>
+    </div>
+    <div id="gOverOverlay" class="g-overlay" style="display:none;">
+      <div class="disp" style="font-size:24px; color:var(--danger); margin-bottom:6px;">게임 종료!</div>
+      <div style="color:var(--muted); font-size:14px; margin-bottom:16px;" id="gOverDetail">최종 점수: 0.0</div>
+      <div class="play-controls">
+        <button class="btn btn-sub" id="gRetryBtn">↺ 다시 도전</button>
+        <button class="btn btn-run" id="gNextTeamAfterOverBtn">조 선택으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div class="play-controls" style="margin-top:16px;">
+      <button class="btn btn-sub" id="gRankBtn">🏆 순위 보기</button>
+    </div>
+  </section>
+
+  <!-- ================= G: 절대색감 RANK ================= -->
+  <section id="screen-g-rank" class="screen" hidden style="align-items:center; justify-content:center; text-align:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="disp" style="font-size:clamp(26px,5.5vw,40px); color:var(--accent); margin-bottom:18px;">현재 순위</div>
+    <div class="rank-list" id="gRankList"></div>
+    <button class="btn-primary" id="gBackToPlayBtn" style="margin-top:22px;">게임으로 돌아가기</button>
+  </section>
+
+  <!-- ================= H: 도자기 빚기 SETUP ================= -->
+  <section id="screen-h-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">형태 감각 · 물레 성형</div>
+        <h1 class="disp">도자기 <span>빚기</span></h1>
+        <p>큰 물레 위 점토를 직접 밀고 당겨 목표 형태에 가깝게 빚습니다. 형태뿐 아니라 굴곡의 매끄러움과 입구·바닥 비율도 함께 판정해요.</p>
+      </div>
+      <div class="info-banner">완성 기준은 일치도 85% 이상입니다. 다만 한 부분이 지나치게 튀어나오거나 표면이 너무 거칠면 조금 더 다듬어야 합니다.</div>
+      <div class="start-cta"><button class="btn-primary" id="hSetupNextBtn">물레 시작 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= H: 도자기 빚기 PLAY ================= -->
+  <section id="screen-h-play" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="team-tabs" id="hTeamTabs"></div>
+    <div class="score-bar" id="hScoreBar"></div>
+
+    <div class="h-workbench">
+      <div class="h-target-card">
+        <div class="h-stage main">
+          <svg viewBox="0 0 300 440" aria-label="목표 도자기">
+            <defs>
+              <linearGradient id="hTargetClayGrad" x1="0" x2="1"><stop offset="0" stop-color="#8f6949"/><stop offset=".18" stop-color="#bf8f61"/><stop offset=".48" stop-color="#e0b17d"/><stop offset=".7" stop-color="#b27e55"/><stop offset="1" stop-color="#745039"/></linearGradient>
+              <linearGradient id="hTargetWheelGrad" x1="0" x2="1"><stop offset="0" stop-color="#4f4b46"/><stop offset=".5" stop-color="#8a8178"/><stop offset="1" stop-color="#47433f"/></linearGradient>
+              <filter id="hTargetShadow"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000" flood-opacity=".42"/></filter>
+              <clipPath id="hTargetClip"><path id="hTargetClipPath" d=""></path></clipPath>
+            </defs>
+            <g>
+              <ellipse class="h-wheel-base" cx="150" cy="405" rx="115" ry="23"></ellipse>
+              <ellipse fill="url(#hTargetWheelGrad)" stroke="#675a4f" stroke-width="2" cx="150" cy="386" rx="105" ry="20"></ellipse>
+              <path class="h-wheel-motion" d="M55 386 Q150 402 245 386"></path>
+              <path class="h-wheel-motion" d="M72 379 Q150 391 228 379"></path>
+            </g>
+            <path id="hTargetPath" class="h-clay-path" style="fill:url(#hTargetClayGrad); filter:url(#hTargetShadow);" d=""></path>
+            <g id="hTargetRidges" clip-path="url(#hTargetClip)"></g>
+          </svg>
+        </div>
+        <div class="h-stage-label">목표 모양</div>
+        <div class="h-quality"><span>형태</span><span>매끄러움</span><span>입구·바닥</span></div>
+      </div>
+
+      <div>
+        <div class="h-stage main">
+          <svg id="hClaySvg" viewBox="0 0 300 440" style="touch-action:none; cursor:grab;" aria-label="도자기 성형 작업대">
+            <defs>
+              <linearGradient id="hClayGrad" x1="0" x2="1"><stop offset="0" stop-color="#8f6949"/><stop offset=".18" stop-color="#bf8f61"/><stop offset=".48" stop-color="#e0b17d"/><stop offset=".7" stop-color="#b27e55"/><stop offset="1" stop-color="#745039"/></linearGradient>
+              <linearGradient id="hWheelGrad" x1="0" x2="1"><stop offset="0" stop-color="#4f4b46"/><stop offset=".5" stop-color="#8a8178"/><stop offset="1" stop-color="#47433f"/></linearGradient>
+              <filter id="hClayShadow"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000" flood-opacity=".42"/></filter>
+              <clipPath id="hClayClip"><path id="hClayClipPath" d=""></path></clipPath>
+            </defs>
+            <g class="h-wheel-spin spinning" id="hWheelSpin">
+              <ellipse class="h-wheel-base" cx="150" cy="405" rx="115" ry="23"></ellipse>
+              <ellipse class="h-wheel-top" cx="150" cy="386" rx="105" ry="20"></ellipse>
+              <path class="h-wheel-motion" d="M55 386 Q150 402 245 386"></path>
+              <path class="h-wheel-motion" d="M72 379 Q150 391 228 379"></path>
+            </g>
+            <path class="h-target-outline" id="hTargetOutline" d=""></path>
+            <path class="h-clay-path" id="hClayPath" d=""></path>
+            <g id="hClayRidges" clip-path="url(#hClayClip)"></g>
+          </svg>
+        </div>
+        <div class="h-stage-label">손가락/마우스로 점토의 옆면을 밀고 당겨 성형</div>
+        <div class="h-tools">
+          <button class="h-tool-btn active" id="hWheelBtn">⏸ 물레 정지</button>
+          <button class="h-tool-btn" id="hOverlayBtn">◎ 목표 겹쳐보기</button>
+          <button class="h-tool-btn" id="hResetBtn">↺ 점토 초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="f-feedback" id="hFeedback"></div>
+    <div class="play-controls" style="margin-top:8px;">
+      <button class="btn btn-run" id="hCheckBtn">완성 확인!</button>
+      <button class="btn btn-sub" id="hRankBtn">🏆 순위 보기</button>
+    </div>
+  </section>
+
+  <!-- ================= H: 도자기 빚기 RANK ================= -->
+  <section id="screen-h-rank" class="screen" hidden style="align-items:center; justify-content:center; text-align:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="disp" style="font-size:clamp(26px,5.5vw,40px); color:var(--accent); margin-bottom:18px;">현재 순위</div>
+    <div class="rank-list" id="hRankList"></div>
+    <button class="btn-primary" id="hBackToPlayBtn" style="margin-top:22px;">게임으로 돌아가기</button>
+  </section>
+
+  <!-- ================= C: PUZZLE SETUP ================= -->
+  <section id="screen-c-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">명화 관찰 · 협동 퍼즐</div>
+        <h1 class="disp">명화 <span>퍼즐 만들기</span></h1>
+        <p>스코어 버튼에서 우리 조를 고른 뒤 작품을 선택하세요. 고흐·뭉크·모네뿐 아니라 피카소·마네·달리·몬드리안·칸딘스키까지 포함한 5×5 퍼즐입니다.</p>
+      </div>
+
+      <div class="team-tabs" id="cTeamTabs"></div>
+      <div class="score-bar" id="cScoreBar"></div>
+
+      <div class="section-head"><h2 class="disp">🖼️ 명화 갤러리에서 선택</h2></div>
+      <div id="cGalleryGrid" class="gallery-grid"></div>
+
+      <div class="start-cta"><button class="btn-primary" id="cSetupNextBtn" disabled>퍼즐 만들기 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= C: PUZZLE PLAY ================= -->
+  <section id="screen-c-play" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+
+    <div style="width:min(96vw,1500px); margin:2px auto 12px; text-align:center;">
+      <div class="turn-badge" id="cTurnBadge">1조 · 두 조각을 순서대로 탭해서 맞바꾸세요</div>
+      <div class="score-bar" id="cPlayScoreBar"></div>
+    </div>
+
+    <div class="puzzle-app-shell">
+      <div class="puzzle-panel puzzle-main-panel">
+        <div class="puzzle-topline">
+          <div class="puzzle-stat-row">
+            <div class="puzzle-stat"><span>시간</span><b id="cStopwatch">00:00</b></div>
+            <div class="puzzle-stat"><span>이동</span><b id="cMoveCount">0회</b></div>
+          </div>
+          <div class="puzzle-toolbar">
+            <button class="btn btn-run" id="cHintBtn">💡 힌트 보기 (3/3)</button>
+            <button class="btn btn-sub" id="cShuffleBtn">🔀 다시 섞기</button>
+          </div>
+        </div>
+
+        <div id="cPuzzleWrap" class="puzzle-board-wrap">
+          <div id="cPuzzleGrid" style="position:absolute; inset:0; display:grid; gap:2px; background:var(--panel-line); border-radius:12px; overflow:hidden;"></div>
+          <div id="cHintOverlay" class="puzzle-hint-overlay"><img id="cHintImage" alt="원본 그림 힌트"></div>
+          <div id="cSolvedOverlay" style="display:none; position:absolute; inset:0; background:rgba(11,12,16,.88); border-radius:12px; align-items:center; justify-content:center; flex-direction:column; gap:10px;">
+            <div class="disp" style="font-size:clamp(28px,6vw,44px); color:var(--accent);">완성! +5점</div>
+            <div id="cSolvedTime" style="color:var(--muted); font-size:14px;">00:00</div>
+          </div>
+        </div>
+        <div class="hint-count" id="cHintCount">힌트는 원본 그림을 3초간 보여줍니다.</div>
+        <div class="puzzle-complete-strip" id="cCompleteStrip">퍼즐을 완성했습니다.</div>
+      </div>
+
+      <div class="puzzle-side-panel">
+        <div class="puzzle-info-card">
+          <h3>원본 그림 · 힌트</h3>
+          <img id="cReferenceImage" class="puzzle-reference" alt="현재 작품 원본">
+          <div class="puzzle-work-title" id="cWorkTitle">작품 선택</div>
+          <div class="puzzle-work-artist" id="cWorkArtist"></div>
+          <div class="puzzle-work-meta" id="cWorkMeta">오른쪽 갤러리에서 퍼즐로 만들 작품을 고르세요.</div>
+        </div>
+
+        <div class="puzzle-info-card">
+          <h3>게임 방법</h3>
+          <ul class="puzzle-help">
+            <li>서로 바꿀 두 조각을 차례로 누릅니다.</li>
+            <li>힌트는 최대 3회, 한 번에 3초 동안 원본을 보여줍니다.</li>
+            <li>완성하면 선택된 조에 5점이 추가됩니다.</li>
+          </ul>
+        </div>
+
+        <button class="btn btn-sub" id="cBackToSetupBtn" style="width:100%;">← 작품 선택 화면으로</button>
+      </div>
+
+      <div class="puzzle-panel puzzle-gallery-panel">
+        <div class="puzzle-gallery-head">
+          <h2 class="disp">🖼️ 퍼즐 선택</h2>
+          <p>다른 작품을 누르면 바로 새 퍼즐로 바뀝니다.</p>
+        </div>
+        <div id="cPlayGalleryGrid" class="puzzle-play-gallery"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= D1: CARD FLIP SETUP ================= -->
+  <section id="screen-d1-setup" class="screen" hidden>
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="setup-wrap">
+      <div class="brand">
+        <div class="kicker">조별 점수 게임</div>
+        <h1 class="disp">카드 <span>뒤집기</span></h1>
+        <p>명화와 친숙한 캐릭터 카드 64장을 뒤집어 짝을 맞춰요. 매번 상단에서 점수를 받을 조를 직접 선택합니다.</p>
+      </div>
+      <div class="info-banner">6×6 고정 · 36장(18쌍) · 18종 이미지가 각각 한 쌍씩 등장</div>
+
+      <div class="start-cta"><button class="btn-primary" id="d1SetupNextBtn">게임 시작 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- ================= D: MEMORY MATCH ================= -->
+  <section id="screen-d-memory" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="turn-badge">카드 뒤집어 맞추기 · 8×8</div>
+    <h1 class="disp" id="dMemTurnName" style="font-size:clamp(20px,4vw,30px); margin:2px 0 8px;">점수를 받을 조를 선택하세요</h1>
+    <div class="team-tabs" id="dTeamTabs"></div>
+    <div class="score-bar" id="dScoreBarMem"></div>
+    <div class="mem-grid" id="dMemGrid"></div>
+  </section>
+
+  <!-- ================= D: FINAL SCOREBOARD ================= -->
+  <section id="screen-d-scoreboard" class="screen" hidden style="align-items:center; justify-content:center; text-align:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="disp" style="font-size:clamp(30px,6vw,48px); color:var(--accent); margin-bottom:6px;">최종 결과!</div>
+    <p style="color:var(--muted); font-size:14px; margin:0 0 20px;">카드 뒤집기까지 반영된 현재 통합 점수예요</p>
+    <div class="rank-list" id="dRankList"></div>
+    <button class="btn-primary" id="dRestartBtn" style="margin-top:24px;">처음으로</button>
+  </section>
+
+  <!-- ================= I: COLOR SEQUENCE MEMORY ================= -->
+  <section id="screen-i-play" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="brand">
+      <div class="kicker">색채 · 기억력</div>
+      <h1 class="disp">색 순서 <span>기억</span></h1>
+      <p>빛나는 색의 순서를 보고 같은 순서로 눌러보세요.</p>
+    </div>
+    <div class="score-bar" id="iScoreBar"></div>
+    <div class="game-status" id="iStatus">준비되면 시작하세요.</div>
+    <div class="simon-wrap">
+      <button class="simon-pad red" data-simon="0" aria-label="빨강"></button>
+      <button class="simon-pad yellow" data-simon="1" aria-label="노랑"></button>
+      <button class="simon-pad blue" data-simon="2" aria-label="파랑"></button>
+      <button class="simon-pad green" data-simon="3" aria-label="초록"></button>
+    </div>
+    <div class="play-controls">
+      <button class="btn btn-run" id="iStartBtn">시작 ▶</button>
+    </div>
+  </section>
+
+  <!-- ================= J: RUNNER ================= -->
+  <section id="screen-j-play" class="screen" hidden style="align-items:center;">
+    <button class="home-back" data-home>← 처음으로</button>
+    <div class="brand">
+      <div class="kicker">순발력 · 점프</div>
+      <h1 class="disp">미술실 <span>장애물 달리기</span></h1>
+      <p>학생 캐릭터가 달립니다. 미술실 용품 장애물을 점프로 피해서 최대 거리를 기록하세요.</p>
+    </div>
+    <div class="score-bar" id="jScoreBar"></div>
+    <div class="runner-shell">
+      <div class="runner-hud"><div class="runner-score" id="jScoreText">거리 0m</div><div style="color:var(--muted);font-size:12px;" id="jBestText">BEST 0m · 0점</div></div>
+      <canvas id="jCanvas" class="runner-canvas" width="900" height="260"></canvas>
+      <div class="runner-help">스페이스바 · ↑ · 화면 클릭 = 점프 · 최고거리 100m마다 1점 (최고기록 기준, 중복 가산 없음)</div>
+      <div class="game-status" id="jStatus">준비되면 시작하세요.</div>
+      <div class="play-controls"><button class="btn btn-run" id="jStartBtn">달리기 시작 ▶</button></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function $(id){ return document.getElementById(id); }
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function fmt(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    var m = Math.floor(sec/60), s = sec%60;
+    return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  }
+  var root = document.documentElement;
+  var CIRC = 2 * Math.PI * 120;
+
+  // ---- shared config (batch-adjustable from teacher tab) ----
+  var sharedConfig = { groupCount:6, pairCount:32, tolerance:15, timerMinutes:20 }; // 6조 고정, 카드 뒤집기 8x8(32쌍), 퍼즐 5x5
+
+  // ---- master team roster + score log, shared by every game AND the teacher tab ----
+  var masterTeams = [];
+  var eLog = []; // { teamIdx, activity, delta } — shared score history
+  function ensureMasterTeams(n){
+    n = (isNaN(n)||n<1) ? sharedConfig.groupCount : n;
+    if(masterTeams.length !== n){
+      masterTeams = [];
+      for(var i=0;i<n;i++){ masterTeams.push({ name:(i+1)+"조", score:0 }); }
+    }
+    return masterTeams;
+  }
+  function addMasterScore(teamIdx, activity, delta){
+    if(!masterTeams[teamIdx]) return;
+    masterTeams[teamIdx].score += delta;
+    eLog.push({ teamIdx:teamIdx, activity:activity, delta:delta });
+    if(!$('screen-e-main').hidden){
+      renderETeamList();
+      renderELog();
+    }
+  }
+
+  // ---- shared image gallery: 퍼즐은 익숙한 명화, 카드 뒤집기는 명화 + 친숙한 캐릭터 ----
+  // 이미지 주소를 직접 추측해서 하드코딩하지 않고, 위키피디아 공식 API로 그때그때 최신 주소를 받아옴
+  var PRESET_PAINTINGS = [
+    { title:"다빈치 · 모나리자", artist:"레오나르도 다 빈치", level:"쉬움", wiki:"Mona_Lisa" },
+    { title:"고흐 · 별이 빛나는 밤", artist:"빈센트 반 고흐", level:"쉬움", wiki:"The_Starry_Night" },
+    { title:"뭉크 · 절규", artist:"에드바르 뭉크", level:"쉬움", wiki:"The_Scream" },
+    { title:"호쿠사이 · 가나가와 파도", artist:"가쓰시카 호쿠사이", level:"쉬움", wiki:"The_Great_Wave_off_Kanagawa" },
+    { title:"밀레 · 이삭 줍는 사람들", artist:"장프랑수아 밀레", level:"적당함", wiki:"The_Gleaners" },
+    { title:"베르메르 · 진주 귀걸이를 한 소녀", artist:"요하네스 베르메르", level:"적당함", wiki:"Girl_with_a_Pearl_Earring" },
+    { title:"클림트 · 키스", artist:"구스타프 클림트", level:"적당함", wiki:"The_Kiss_(Klimt)" },
+    { title:"모네 · 인상, 해돋이", artist:"클로드 모네", level:"적당함", wiki:"Impression,_Sunrise" },
+    { title:"고흐 · 해바라기", artist:"빈센트 반 고흐", level:"쉬움", wiki:"Sunflowers_(Van_Gogh_series)" },
+    { title:"쇠라 · 그랑드자트섬의 일요일 오후", artist:"조르주 쇠라", level:"도전", wiki:"A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte" },
+
+    { title:"피카소 · 게르니카", artist:"파블로 피카소", level:"도전", wiki:"Guernica_(Picasso)" },    { title:"달리 · 기억의 지속", artist:"살바도르 달리", level:"도전", wiki:"The_Persistence_of_Memory" },
+    { title:"몬드리안 · 빨강, 파랑, 노랑의 구성", artist:"피트 몬드리안", level:"쉬움", wiki:"Composition_with_Red_Blue_and_Yellow" },
+    { title:"칸딘스키 · 구성 8", artist:"바실리 칸딘스키", level:"도전", wiki:"Composition_8_(Kandinsky)" }
+  ];
+
+  var MEMORY_ASSETS = PRESET_PAINTINGS.slice().concat([
+    { title:"다빈치 · 최후의 만찬", wiki:"The_Last_Supper_(Leonardo)" },
+    { title:"렘브란트 · 야경", wiki:"The_Night_Watch" },
+    { title:"벨라스케스 · 시녀들", wiki:"Las_Meninas" },
+    { title:"마네 · 피리 부는 소년", wiki:"The_Fifer" },
+    { title:"프리드리히 · 안개바다 위의 방랑자", wiki:"Wanderer_above_the_Sea_of_Fog" },
+    { title:"고흐 · 밤의 카페 테라스", wiki:"Café_Terrace_at_Night" },
+    { title:"고흐 · 아를의 침실", wiki:"Bedroom_in_Arles" },
+    { title:"모네 · 수련", wiki:"Water_Lilies_(Monet_series)" },
+    { title:"뽀로로", wiki:"Pororo_the_Little_Penguin", wikiKo:"뽀로로" },
+    { title:"도라에몽", wiki:"Doraemon", wikiKo:"도라에몽" },
+    { title:"노진구", wiki:"Nobita_Nobi" },
+    { title:"신이슬", wiki:"Shizuka_Minamoto" },
+    { title:"퉁퉁이", wiki:"Takeshi_Gouda" },
+    { title:"비실이", wiki:"Suneo_Honekawa" }
+  ]);
+  var FALLBACK_IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">' +
+    '<rect width="300" height="300" fill="#2a2c36"/>' +
+    '<text x="50%" y="50%" fill="#8A8D98" font-size="18" text-anchor="middle" dy=".3em">이미지 없음</text></svg>'
+  );
+  var paintingImageCache = {};
+  function fetchPaintingImage(entry, cb){
+    if(paintingImageCache[entry.wiki] !== undefined){ cb(paintingImageCache[entry.wiki]); return; }
+    var tries = [];
+    if(entry.wikiKo) tries.push('https://ko.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(entry.wikiKo));
+    tries.push('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(entry.wiki));
+    function tryAt(i){
+      if(i >= tries.length){ paintingImageCache[entry.wiki] = null; cb(null); return; }
+      fetch(tries[i])
+        .then(function(res){ if(!res.ok) throw new Error('bad status'); return res.json(); })
+        .then(function(data){
+          var url = (data.originalimage && data.originalimage.source) || (data.thumbnail && data.thumbnail.source) || null;
+          if(!url){ tryAt(i+1); return; }
+          paintingImageCache[entry.wiki] = url;
+          cb(url);
+        })
+        .catch(function(){ tryAt(i+1); });
+    }
+    tryAt(0);
+  }
+
+  function makeLabelFallback(title){
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">' +
+      '<rect width="300" height="300" rx="22" fill="#2a2c36"/>' +
+      '<text x="50%" y="50%" fill="#F5F5F0" font-size="28" font-family="sans-serif" text-anchor="middle" dy=".3em">' + title + '</text></svg>'
+    );
+  }
+  function renderGalleryInto(gridId, onSelect){
+    var grid = $(gridId);
+    grid.innerHTML = "";
+    PRESET_PAINTINGS.forEach(function(p){
+      var card = document.createElement('div');
+      card.className = 'gallery-card';
+      var img = document.createElement('img');
+      img.className = 'gallery-thumb';
+      img.alt = p.title;
+      img.src = FALLBACK_IMG; // 로딩 중/실패 시 표시될 자리표시자
+      var titleEl = document.createElement('div');
+      titleEl.className = 'gallery-title';
+      titleEl.textContent = p.title;
+      var levelEl = document.createElement('div');
+      levelEl.className = 'gallery-level';
+      levelEl.textContent = p.level;
+      card.appendChild(img); card.appendChild(titleEl); card.appendChild(levelEl);
+      grid.appendChild(card);
+
+      fetchPaintingImage(p, function(url){
+        if(url) img.src = url;
+      });
+
+      card.addEventListener('click', function(){
+        grid.querySelectorAll('.gallery-card').forEach(function(c){ c.classList.remove('selected'); });
+        card.classList.add('selected');
+        fetchPaintingImage(p, function(url){ onSelect(url || FALLBACK_IMG); });
+      });
+    });
+  }
+
+  var screens = ["home","c-setup","c-play","d1-setup","d-memory","d-scoreboard","e-setup","e-main","e-rank","f-setup","f-play","f-rank","g-setup","g-play","g-rank","h-setup","h-play","h-rank","i-play","j-play"];
+  function switchScreen(name){
+    screens.forEach(function(s){ $("screen-"+s).hidden = (s !== name); });
+  }
+  document.querySelectorAll('[data-home]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      root.style.setProperty('--accent', '#FF5F5F');
+      if(typeof cStopwatchId !== 'undefined' && cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+      if(typeof gTimerId !== 'undefined' && gTimerId){ clearInterval(gTimerId); gTimerId=null; }
+      if(typeof dPuzTimerId !== 'undefined' && dPuzTimerId){ clearInterval(dPuzTimerId); dPuzTimerId=null; }
+      if(typeof jStopGame === 'function') jStopGame();
+      switchScreen('home');
+    });
+  });
+  $('goC').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#B18CFF');
+    cGridN = 5;
+    switchScreen('c-setup');
+  });
+  $('goD1').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#FF8FD8');
+    switchScreen('d1-setup');
+  });
+  $('goE').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#FFC145');
+    if(masterTeams.length > 0){
+      renderEActivityTabs();
+      renderETeamList();
+      renderELog();
+      eUpdateTimerText();
+      switchScreen('e-main');
+    } else {
+      switchScreen('e-setup');
+    }
+  });
+  $('goF').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#5FD9FF');
+    switchScreen('f-setup');
+  });
+  $('goG').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#FF6B9D');
+    switchScreen('g-setup');
+  });
+  $('goH').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#D2A679');
+    switchScreen('h-setup');
+  });
+  $('goI').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#8CE99A');
+    iTeams = ensureMasterTeams(sharedConfig.groupCount);
+    iCurrentTeamIdx = 0;
+    iReset();
+    switchScreen('i-play');
+  });
+  $('goJ').addEventListener('click', function(){
+    root.style.setProperty('--accent', '#FFB454');
+    jTeams = ensureMasterTeams(sharedConfig.groupCount);
+    jCurrentTeamIdx = 0;
+    jStopGame();
+    jRenderScoreBar();
+    jDraw();
+    switchScreen('j-play');
+  });
+
+  /* =======================================================
+     C. 명화 퍼즐 만들기 (스와프 퍼즐, 조별 진행)
+     ======================================================= */
+  var cImageURL = null;
+  var cCurrentWiki = null;
+  var cCurrentPainting = null;
+  var cMoveCount = 0;
+  var cGridN = 5; // 5x5 고정
+  var cTileOrder = [];
+  var cSelectedTile = null;
+  var cStopwatchId = null;
+  var cElapsed = 0;
+  var cHintsLeft = 3;
+  var cHintTimer = null;
+  var cTeams = [];
+  var cCurrentTeamIdx = 0;
+  var cSolvedByTeam = {}; // { teamIdx: [wiki, wiki, ...] }
+
+  function cIsSolvedByCurrentTeam(wiki){
+    var arr = cSolvedByTeam[cCurrentTeamIdx];
+    return !!(arr && arr.indexOf(wiki) !== -1);
+  }
+
+  function makePuzzleGalleryCard(p, grid, onPick){
+    var solved = cIsSolvedByCurrentTeam(p.wiki);
+    var card = document.createElement('div');
+    card.className = 'gallery-card' + (solved ? ' solved' : '') + (cCurrentWiki===p.wiki ? ' selected' : '');
+
+    var img = document.createElement('img');
+    img.className = 'gallery-thumb';
+    img.alt = p.title;
+    img.src = FALLBACK_IMG;
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'gallery-title';
+    titleEl.textContent = p.title;
+
+    var levelEl = document.createElement('div');
+    levelEl.className = 'gallery-level';
+    levelEl.textContent = solved ? '✅ 완료함' : p.level;
+
+    card.appendChild(img);
+    card.appendChild(titleEl);
+    card.appendChild(levelEl);
+    grid.appendChild(card);
+
+    fetchPaintingImage(p, function(url){ if(url) img.src = url; });
+
+    if(!solved){
+      card.addEventListener('click', function(){
+        onPick(p, card, urlFromCard(img));
+      });
+    }
+  }
+
+  function urlFromCard(img){
+    return (img && img.src && img.src !== location.href) ? img.src : FALLBACK_IMG;
+  }
+
+  function choosePuzzlePainting(p, grid, card, afterChoose){
+    grid.querySelectorAll('.gallery-card').forEach(function(c){ c.classList.remove('selected'); });
+    card.classList.add('selected');
+    fetchPaintingImage(p, function(url){
+      cImageURL = url || FALLBACK_IMG;
+      cCurrentWiki = p.wiki;
+      cCurrentPainting = p;
+      if(afterChoose) afterChoose();
+    });
+  }
+
+  function renderCGallery(){
+    cTeams = ensureMasterTeams(sharedConfig.groupCount);
+    renderScoreBar('cScoreBar', cCurrentTeamIdx, function(i){
+      cCurrentTeamIdx=i;
+      renderCGallery();
+    });
+
+    var grid = $('cGalleryGrid');
+    grid.innerHTML = "";
+    cImageURL = null;
+    cCurrentWiki = null;
+    cCurrentPainting = null;
+    $('cSetupNextBtn').disabled = true;
+
+    PRESET_PAINTINGS.forEach(function(p){
+      var card = document.createElement('div');
+      var solved = cIsSolvedByCurrentTeam(p.wiki);
+      card.className = 'gallery-card' + (solved ? ' solved' : '');
+
+      var img = document.createElement('img');
+      img.className = 'gallery-thumb';
+      img.alt = p.title;
+      img.src = FALLBACK_IMG;
+
+      var titleEl = document.createElement('div');
+      titleEl.className = 'gallery-title';
+      titleEl.textContent = p.title;
+
+      var levelEl = document.createElement('div');
+      levelEl.className = 'gallery-level';
+      levelEl.textContent = solved ? '✅ 완료함' : p.level;
+
+      card.appendChild(img); card.appendChild(titleEl); card.appendChild(levelEl);
+      grid.appendChild(card);
+      fetchPaintingImage(p, function(url){ if(url) img.src = url; });
+
+      if(!solved){
+        card.addEventListener('click', function(){
+          choosePuzzlePainting(p, grid, card, function(){
+            $('cSetupNextBtn').disabled = false;
+          });
+        });
+      }
+    });
+  }
+
+  function updatePuzzleWorkInfo(){
+    if(!cCurrentPainting) return;
+    $('cReferenceImage').src = cImageURL || FALLBACK_IMG;
+    $('cWorkTitle').textContent = cCurrentPainting.title.replace(/^.*? · /,'');
+    $('cWorkArtist').textContent = cCurrentPainting.artist || cCurrentPainting.title.split(' · ')[0];
+    $('cWorkMeta').textContent = '난이도 · ' + cCurrentPainting.level + '  |  5×5 스와프 퍼즐';
+  }
+
+  function renderCPlayGallery(){
+    var grid = $('cPlayGalleryGrid');
+    grid.innerHTML = "";
+    PRESET_PAINTINGS.forEach(function(p){
+      var solved = cIsSolvedByCurrentTeam(p.wiki);
+      var card = document.createElement('div');
+      card.className = 'gallery-card' + (solved ? ' solved' : '') + (cCurrentWiki===p.wiki ? ' selected' : '');
+
+      var img = document.createElement('img');
+      img.className = 'gallery-thumb';
+      img.alt = p.title;
+      img.src = FALLBACK_IMG;
+
+      var titleEl = document.createElement('div');
+      titleEl.className = 'gallery-title';
+      titleEl.textContent = p.title;
+
+      var levelEl = document.createElement('div');
+      levelEl.className = 'gallery-level';
+      levelEl.textContent = solved ? '✅ 완료함' : p.level;
+
+      card.appendChild(img); card.appendChild(titleEl); card.appendChild(levelEl);
+      grid.appendChild(card);
+      fetchPaintingImage(p, function(url){ if(url) img.src = url; });
+
+      if(!solved){
+        card.addEventListener('click', function(){
+          if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+          choosePuzzlePainting(p, grid, card, function(){
+            updatePuzzleWorkInfo();
+            buildPuzzle();
+            renderCPlayGallery();
+          });
+        });
+      }
+    });
+  }
+
+
+
+  function renderCPlayScoreBar(){
+    renderScoreBar('cPlayScoreBar', cCurrentTeamIdx, function(i){
+      if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+      cCurrentTeamIdx=i;
+      $('cTurnBadge').textContent = cTeams[cCurrentTeamIdx].name + ' · 두 조각을 순서대로 탭해서 맞바꾸세요';
+      renderCPlayScoreBar();
+      renderCPlayGallery();
+      buildPuzzle();
+    });
+  }
+
+  $('cSetupNextBtn').addEventListener('click', function(){
+    if(!cImageURL) return;
+    switchScreen('c-play');
+    $('cTurnBadge').textContent = cTeams[cCurrentTeamIdx].name + ' · 두 조각을 순서대로 탭해서 맞바꾸세요';
+    renderCPlayScoreBar();
+    updatePuzzleWorkInfo();
+    renderCPlayGallery();
+    buildPuzzle();
+  });
+
+  function shuffledNotSolved(n){
+    var arr = [];
+    for(var i=0;i<n*n;i++){ arr.push(i); }
+    do{ arr = shuffle(arr); } while(isSolved(arr));
+    return arr;
+  }
+  function isSolved(arr){
+    for(var i=0;i<arr.length;i++){ if(arr[i]!==i) return false; }
+    return true;
+  }
+
+  function buildPuzzle(){
+    cSelectedTile = null;
+    cMoveCount = 0;
+    $('cMoveCount').textContent = '0회';
+    cHintsLeft = 3;
+    if(cHintTimer){ clearTimeout(cHintTimer); cHintTimer=null; }
+    $('cHintOverlay').classList.remove('show');
+    $('cHintBtn').disabled = false;
+    $('cHintBtn').textContent = '💡 힌트 보기 (3/3)';
+    $('cHintCount').textContent = '힌트는 원본 그림을 3초간 보여줍니다.';
+    cTileOrder = shuffledNotSolved(cGridN);
+    $('cSolvedOverlay').style.display = 'none';
+    $('cCompleteStrip').style.display = 'none';
+    renderPuzzleGrid();
+    startStopwatch();
+  }
+
+  function renderPuzzleGrid(){
+    var grid = $('cPuzzleGrid');
+    grid.style.gridTemplateColumns = 'repeat(' + cGridN + ', 1fr)';
+    grid.innerHTML = "";
+    var pct = cGridN > 1 ? 100/(cGridN-1) : 0;
+    cTileOrder.forEach(function(homeIdx, cellIdx){
+      var tile = document.createElement('div');
+      tile.className = 'puzzle-tile';
+      tile.dataset.cell = cellIdx;
+      var col = homeIdx % cGridN, row = Math.floor(homeIdx / cGridN);
+      tile.style.backgroundImage = 'url(' + cImageURL + ')';
+      tile.style.backgroundSize = (cGridN*100) + '% ' + (cGridN*100) + '%';
+      tile.style.backgroundPosition = (col*pct) + '% ' + (row*pct) + '%';
+      tile.addEventListener('click', function(){ onTileClick(cellIdx); });
+      grid.appendChild(tile);
+    });
+  }
+
+  function onTileClick(cellIdx){
+    var tiles = $('cPuzzleGrid').children;
+    if(cSelectedTile === null){
+      cSelectedTile = cellIdx;
+      tiles[cellIdx].classList.add('selected');
+      return;
+    }
+    if(cSelectedTile === cellIdx){
+      tiles[cellIdx].classList.remove('selected');
+      cSelectedTile = null;
+      return;
+    }
+    var tmp = cTileOrder[cSelectedTile];
+    cTileOrder[cSelectedTile] = cTileOrder[cellIdx];
+    cTileOrder[cellIdx] = tmp;
+    cMoveCount += 1;
+    $('cMoveCount').textContent = cMoveCount + '회';
+    tiles[cSelectedTile].classList.remove('selected');
+    cSelectedTile = null;
+    renderPuzzleGrid();
+    if(isSolved(cTileOrder)){ onPuzzleSolved(); }
+  }
+
+  function startStopwatch(){
+    if(cStopwatchId){ clearInterval(cStopwatchId); }
+    cElapsed = 0;
+    $('cStopwatch').textContent = fmt(0);
+    cStopwatchId = setInterval(function(){
+      cElapsed += 1;
+      $('cStopwatch').textContent = fmt(cElapsed);
+    }, 1000);
+  }
+  function onPuzzleSolved(){
+    if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+    if(!cSolvedByTeam[cCurrentTeamIdx]) cSolvedByTeam[cCurrentTeamIdx] = [];
+    if(cCurrentWiki && cSolvedByTeam[cCurrentTeamIdx].indexOf(cCurrentWiki) === -1){
+      cSolvedByTeam[cCurrentTeamIdx].push(cCurrentWiki);
+    }
+    addMasterScore(cCurrentTeamIdx, '명화 퍼즐', 5);
+    $('cSolvedTime').textContent = '완성 시간: ' + fmt(cElapsed) + ' · 이동 ' + cMoveCount + '회';
+    $('cSolvedOverlay').style.display = 'flex';
+    $('cCompleteStrip').style.display = 'block';
+    $('cCompleteStrip').textContent = cTeams[cCurrentTeamIdx].name + ' · ' + cCurrentPainting.title + ' 완성! +5점';
+    renderCPlayScoreBar();
+    renderCPlayGallery();
+  }
+
+  $('cHintBtn').addEventListener('click', function(){
+    if(cHintsLeft <= 0 || !cImageURL) return;
+    cHintsLeft -= 1;
+    $('cHintImage').src = cImageURL;
+    $('cHintOverlay').classList.add('show');
+    $('cHintBtn').textContent = '💡 힌트 보기 (' + cHintsLeft + '/3)';
+    $('cHintCount').textContent = cHintsLeft > 0 ? '남은 힌트 ' + cHintsLeft + '회' : '힌트를 모두 사용했습니다.';
+    if(cHintsLeft <= 0) $('cHintBtn').disabled = true;
+    if(cHintTimer) clearTimeout(cHintTimer);
+    cHintTimer = setTimeout(function(){ $('cHintOverlay').classList.remove('show'); cHintTimer=null; }, 3000);
+  });
+
+  $('cShuffleBtn').addEventListener('click', buildPuzzle);
+  $('cBackToSetupBtn').addEventListener('click', function(){
+    if(cStopwatchId){ clearInterval(cStopwatchId); cStopwatchId=null; }
+    switchScreen('c-setup');
+    renderCGallery();
+  });
+
+  /* =======================================================
+     D. 카드 뒤집기 (조 선택식 스코어보드)
+     ======================================================= */
+  var dTeams = [];
+  var dPairCount = 18; // 6x6 = 36장 = 18쌍 고정
+
+  function renderTeamTabs(containerId, teams, currentIdx, onSelect, disabled){
+    var wrap = $(containerId);
+    if(!wrap) return;
+    wrap.innerHTML = "";
+    teams.forEach(function(t, i){
+      var btn = document.createElement('button');
+      btn.className = 'team-tab' + (i===currentIdx ? ' active' : '');
+      btn.textContent = t.name;
+      btn.disabled = !!disabled;
+      btn.addEventListener('click', function(){ if(!disabled) onSelect(i); });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderScoreBar(containerId, highlightIdx, onSelect, disabled){
+    var bar = $(containerId);
+    bar.innerHTML = "";
+    masterTeams.forEach(function(t, i){
+      var chip = document.createElement(onSelect ? 'button' : 'div');
+      if(onSelect) chip.type = 'button';
+      chip.className = 'score-chip' + (i===highlightIdx ? ' current' : '') + (onSelect ? ' selectable' : '');
+      chip.innerHTML = '<div class="sc-name">'+t.name+'</div><div class="sc-val">'+(Math.round(t.score*10)/10)+'</div>';
+      if(onSelect){
+        chip.disabled = !!disabled;
+        chip.addEventListener('click', function(){
+          if(!disabled) onSelect(i);
+        });
+      }
+      bar.appendChild(chip);
+    });
+  }
+
+  $('d1SetupNextBtn').addEventListener('click', function(){
+    dTeams = ensureMasterTeams(sharedConfig.groupCount);
+    startMemoryGame();
+  });
+
+  /* ---- Memory match ---- */
+  var dMemDeck = [];
+  var dMemFlipped = [];
+  var dMemLock = false;
+  var dMemCurrentTeam = 0;
+
+  function startMemoryGame(){
+    switchScreen('d-memory');
+    dMemDeck = [];
+    $('dMemGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--muted); padding:40px;">이미지 불러오는 중...</div>';
+    var pool = MEMORY_ASSETS.slice(0,18);
+    var urls = {};
+    var loaded = 0;
+    pool.forEach(function(p){
+      fetchPaintingImage(p, function(url){
+        urls[p.wiki] = url || makeLabelFallback(p.title);
+        loaded++;
+        if(loaded === pool.length){ buildMemoryDeck(pool, urls); }
+      });
+    });
+  }
+
+  function buildMemoryDeck(pool, urls){
+    var cards = [];
+    // 18개의 서로 다른 이미지가 각각 딱 한 쌍씩 등장합니다.
+    pool.forEach(function(p){
+      cards.push({key:p.title, url:urls[p.wiki]});
+      cards.push({key:p.title, url:urls[p.wiki]});
+    });
+    dMemDeck = shuffle(cards).map(function(c){ return { key:c.key, url:c.url, matched:false }; });
+    dMemFlipped = [];
+    dMemLock = false;
+    dMemCurrentTeam = 0;
+    updateMemTurnBadge();
+    renderDTeamTabs();
+    renderDScoreBar();
+    renderDMemGrid();
+  }
+
+  function updateMemTurnBadge(){
+    $('dMemTurnName').textContent = dTeams[dMemCurrentTeam].name + '에 점수 기록 중';
+  }
+  function renderDScoreBar(){
+    renderScoreBar('dScoreBarMem', dMemCurrentTeam, function(i){
+      if(dMemLock || dMemFlipped.length > 0) return;
+      dMemCurrentTeam=i;
+      updateMemTurnBadge();
+      renderDScoreBar();
+    }, dMemLock || dMemFlipped.length > 0);
+  }
+  function renderDTeamTabs(){
+    renderTeamTabs('dTeamTabs', dTeams, dMemCurrentTeam, function(i){
+      if(dMemLock || dMemFlipped.length > 0) return;
+      dMemCurrentTeam = i;
+      updateMemTurnBadge();
+      renderDTeamTabs();
+      renderDScoreBar();
+    }, dMemLock || dMemFlipped.length > 0);
+  }
+
+  function renderDMemGrid(){
+    var grid = $('dMemGrid');
+    grid.style.gridTemplateColumns = 'repeat(6, minmax(58px, 88px))';
+    grid.style.justifyContent = 'center';
+    grid.innerHTML = "";
+    dMemDeck.forEach(function(card, idx){
+      var el = document.createElement('div');
+      el.className = 'mem-card' + (card.matched ? ' matched' : '');
+      var faceUp = card.matched || dMemFlipped.indexOf(idx) !== -1;
+      if(faceUp){
+        el.style.backgroundImage = 'url(' + card.url + ')';
+        el.textContent = '';
+      } else {
+        el.textContent = '❓';
+      }
+      el.addEventListener('click', function(){ onMemCardClick(idx); });
+      grid.appendChild(el);
+    });
+  }
+
+  function onMemCardClick(idx){
+    if(dMemLock) return;
+    if(dMemDeck[idx].matched) return;
+    if(dMemFlipped.indexOf(idx) !== -1) return;
+    dMemFlipped.push(idx);
+    renderDMemGrid();
+    renderDTeamTabs();
+    if(dMemFlipped.length === 2){
+      dMemLock = true;
+      var i1 = dMemFlipped[0], i2 = dMemFlipped[1];
+      if(dMemDeck[i1].key === dMemDeck[i2].key){
+        setTimeout(function(){
+          dMemDeck[i1].matched = true;
+          dMemDeck[i2].matched = true;
+          addMasterScore(dMemCurrentTeam, '카드 뒤집기', 1);
+          dMemFlipped = [];
+          dMemLock = false;
+          renderDScoreBar();
+          renderDMemGrid();
+          renderDTeamTabs();
+          if(dMemDeck.every(function(c){ return c.matched; })){
+            showDScoreboard();
+          }
+        }, 500);
+      } else {
+        setTimeout(function(){
+          dMemFlipped = [];
+          dMemLock = false;
+          updateMemTurnBadge();
+          renderDScoreBar();
+          renderDMemGrid();
+          renderDTeamTabs();
+        }, 900);
+      }
+    }
+  }
+
+  function showDScoreboard(){
+    var sorted = dTeams.slice().sort(function(a,b){ return b.score - a.score; });
+    var list = $('dRankList');
+    list.innerHTML = "";
+    sorted.forEach(function(t, i){
+      var row = document.createElement('div');
+      row.className = 'rank-row' + (i===0 ? ' first' : '');
+      row.innerHTML = '<div class="rk-name">' + (i===0?'👑 ':'') + (i+1) + '. ' + t.name + '</div><div class="rk-score">' + (Math.round(t.score*10)/10).toFixed(1) + '점</div>';
+      list.appendChild(row);
+    });
+    switchScreen('d-scoreboard');
+  }
+  $('dRestartBtn').addEventListener('click', function(){ root.style.setProperty('--accent', '#FF5F5F'); switchScreen('home'); });
+
+  /* =======================================================
+     E. 실시간 스코어보드 (교사 전용 기록)
+     ======================================================= */
+  var DEFAULT_ACTIVITIES = ["카드 뒤집기", "색 맞추기", "절대색감", "도자기 빚기", "명화 퍼즐", "색 순서 기억", "장애물 달리기", "자유 활동"];
+  var eActivities = DEFAULT_ACTIVITIES.slice();
+  var eTeams = [];
+  var eCurrentActivity = 0;
+
+  // ---- batch settings, adjustable from teacher tab (조 개수는 6조 고정, 조절 UI 없음) ----
+  $('cfgTimerMinutes').addEventListener('input', function(){
+    var v = parseInt($('cfgTimerMinutes').value,10);
+    if(!isNaN(v) && v>=1) sharedConfig.timerMinutes = v;
+  });
+
+  // ---- teacher tab: overall countdown timer ----
+  var eTimeLeft = sharedConfig.timerMinutes * 60;
+  var eTimerId = null;
+  var eTimerRunning = false;
+  function eFmtTimer(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    var m = Math.floor(sec/60), s = sec%60;
+    return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  }
+  function eUpdateTimerText(){ $('eTimerText').textContent = eFmtTimer(eTimeLeft); }
+  function eTimerTick(){
+    eTimeLeft -= 1;
+    if(eTimeLeft <= 0){ eTimeLeft = 0; eTimerPause(); }
+    eUpdateTimerText();
+  }
+  function eTimerStart(){
+    if(eTimerRunning || eTimeLeft<=0) return;
+    eTimerRunning = true;
+    $('eTimerRunBtn').textContent = '일시정지';
+    eTimerId = setInterval(eTimerTick, 1000);
+  }
+  function eTimerPause(){
+    eTimerRunning = false;
+    if(eTimerId){ clearInterval(eTimerId); eTimerId = null; }
+    $('eTimerRunBtn').textContent = '시작';
+  }
+  $('eTimerRunBtn').addEventListener('click', function(){ if(eTimerRunning) eTimerPause(); else eTimerStart(); });
+  $('eTimerResetBtn').addEventListener('click', function(){
+    eTimerPause();
+    eTimeLeft = sharedConfig.timerMinutes * 60;
+    eUpdateTimerText();
+  });
+  function eTimerAdjust(deltaSec){
+    eTimeLeft = Math.max(0, eTimeLeft + deltaSec);
+    if(eTimeLeft <= 0){ eTimerPause(); }
+    eUpdateTimerText();
+  }
+  $('eTimerMinusBtn').addEventListener('click', function(){ eTimerAdjust(-60); });
+  $('eTimerPlusBtn').addEventListener('click', function(){ eTimerAdjust(60); });
+
+  function renderEActivityList(){
+    var list = $('eActivityList');
+    list.innerHTML = "";
+    eActivities.forEach(function(a, i){
+      var row = document.createElement('div');
+      row.className = 'chip-card';
+      var t = document.createElement('input');
+      t.type = 'text'; t.value = a;
+      t.addEventListener('input', function(){ eActivities[i] = t.value; });
+      var del = document.createElement('button');
+      del.className = 'chip-del'; del.textContent = '✕';
+      del.addEventListener('click', function(){ eActivities.splice(i,1); renderEActivityList(); });
+      row.appendChild(t); row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+  $('eAddActivityBtn').addEventListener('click', function(){ eActivities.push("새 활동"); renderEActivityList(); });
+
+  $('eSetupNextBtn').addEventListener('click', function(){
+    eTeams = ensureMasterTeams(sharedConfig.groupCount);
+    if(eActivities.length === 0){ eActivities = ["자유 활동"]; }
+    eCurrentActivity = 0;
+    eTimerPause();
+    eTimeLeft = sharedConfig.timerMinutes * 60;
+    eUpdateTimerText();
+    renderEActivityTabs();
+    renderETeamList();
+    renderELog();
+    switchScreen('e-main');
+  });
+
+  function renderEActivityTabs(){
+    var tabs = $('eActivityTabs');
+    tabs.innerHTML = "";
+    eActivities.forEach(function(a, i){
+      var tab = document.createElement('div');
+      tab.className = 'activity-tab' + (i===eCurrentActivity ? ' active' : '');
+      tab.textContent = a;
+      tab.addEventListener('click', function(){ eCurrentActivity = i; renderEActivityTabs(); });
+      tabs.appendChild(tab);
+    });
+  }
+
+  function renderETeamList(){
+    var list = $('eTeamList');
+    list.innerHTML = "";
+    eTeams.forEach(function(t, i){
+      var row = document.createElement('div');
+      row.className = 'team-score-row';
+      var name = document.createElement('div');
+      name.className = 'ts-name';
+      name.textContent = t.name;
+      var minusBtn = document.createElement('button');
+      minusBtn.className = 'ts-btn minus'; minusBtn.textContent = '−1';
+      minusBtn.addEventListener('click', function(){ applyEScore(i, -1); });
+      var score = document.createElement('div');
+      score.className = 'ts-score';
+      score.textContent = (Math.round(t.score*10)/10).toFixed(1);
+      var plus1 = document.createElement('button');
+      plus1.className = 'ts-btn plus'; plus1.textContent = '+1';
+      plus1.addEventListener('click', function(){ applyEScore(i, 1); });
+      var plus3 = document.createElement('button');
+      plus3.className = 'ts-btn plus'; plus3.textContent = '+3';
+      plus3.addEventListener('click', function(){ applyEScore(i, 3); });
+      var btns = document.createElement('div');
+      btns.className = 'ts-btns';
+      btns.appendChild(minusBtn); btns.appendChild(plus1); btns.appendChild(plus3);
+      row.appendChild(name); row.appendChild(score); row.appendChild(btns);
+      list.appendChild(row);
+    });
+  }
+
+  function applyEScore(teamIdx, delta){
+    addMasterScore(teamIdx, eActivities[eCurrentActivity], delta);
+  }
+
+  function renderELog(){
+    var logList = $('eLogList');
+    logList.innerHTML = "";
+    eLog.slice(-8).reverse().forEach(function(entry){
+      var item = document.createElement('div');
+      item.className = 'score-log-item';
+      var sign = entry.delta > 0 ? '+' : '';
+      var deltaFmt = Math.round(entry.delta*10)/10;
+      item.innerHTML = '<b>' + eTeams[entry.teamIdx].name + '</b> · ' + entry.activity + ' · ' + sign + deltaFmt + '점';
+      logList.appendChild(item);
+    });
+  }
+
+  $('eSettingsBtn').addEventListener('click', function(){ switchScreen('e-setup'); });
+
+  $('eUndoBtn').addEventListener('click', function(){
+    if(eLog.length === 0) return;
+    var last = eLog.pop();
+    eTeams[last.teamIdx].score -= last.delta;
+    renderETeamList();
+    renderELog();
+  });
+
+  $('eRankBtn').addEventListener('click', function(){
+    var sorted = eTeams.slice().sort(function(a,b){ return b.score - a.score; });
+    var list = $('eRankList');
+    list.innerHTML = "";
+    sorted.forEach(function(t, i){
+      var row = document.createElement('div');
+      row.className = 'rank-row' + (i===0 ? ' first' : '');
+      row.innerHTML = '<div class="rk-name">' + (i===0?'👑 ':'') + (i+1) + '. ' + t.name + '</div><div class="rk-score">' + (Math.round(t.score*10)/10).toFixed(1) + '점</div>';
+      list.appendChild(row);
+    });
+    switchScreen('e-rank');
+  });
+  $('eBackToMainBtn').addEventListener('click', function(){ switchScreen('e-main'); });
+
+  /* =======================================================
+     F. 물감 색 맞추기 (RYB 감산 혼합)
+     ======================================================= */
+  var fTeams = [];
+  var fCurrentTeamIdx = 0;
+  var fMix = { r:0, y:0, b:0, w:0, k:0 };
+  var fTargetMix = { r:1, y:1, b:0, w:0, k:0 };
+  var fTargetRGB = [255,128,0];
+  var F_MAX_DROPS = 12;
+
+  $('fSetupNextBtn').addEventListener('click', function(){
+    fTeams = ensureMasterTeams(sharedConfig.groupCount);
+    fCurrentTeamIdx = 0;
+    switchScreen('f-play');
+    renderFTeamTabs();
+    renderFScoreBar();
+    startFRound();
+  });
+
+  function renderFTeamTabs(){ /* 별도 조 탭은 사용하지 않음 */ }
+  function renderFScoreBar(){
+    renderScoreBar('fScoreBar', fCurrentTeamIdx, function(i){
+      fCurrentTeamIdx=i;
+      renderFScoreBar();
+      startFRound();
+    });
+  }
+
+  // RYB(전통 물감 3원색) 비율을 RGB 화면색으로 근사 변환.
+  // red+yellow→orange, yellow+blue→green, red+blue→purple이 자연스럽게 나타나도록 삼선형 보간 사용.
+  function rybToRgb(r, y, b){
+    var sum = r+y+b;
+    if(sum <= 0) return [238,232,216];
+    r/=sum; y/=sum; b/=sum;
+    var m = Math.max(r,y,b);
+    if(m>0){ r/=m; y/=m; b/=m; }
+    function cubic(t, a,bv,c,d){
+      var u=1-t;
+      return u*u*u*a + 3*u*u*t*bv + 3*u*t*t*c + t*t*t*d;
+    }
+    // Gossett/Chen 계열 RYB cube corner 근사값
+    var c000=[245,240,220], c100=[220,45,45], c010=[245,205,35], c001=[45,70,190];
+    var c110=[238,108,20], c101=[118,45,128], c011=[45,128,70], c111=[55,45,42];
+    var out=[];
+    for(var ch=0;ch<3;ch++){
+      var x00=c000[ch]*(1-r)+c100[ch]*r;
+      var x10=c010[ch]*(1-r)+c110[ch]*r;
+      var x01=c001[ch]*(1-r)+c101[ch]*r;
+      var x11=c011[ch]*(1-r)+c111[ch]*r;
+      var xy0=x00*(1-y)+x10*y;
+      var xy1=x01*(1-y)+x11*y;
+      out[ch]=Math.round(xy0*(1-b)+xy1*b);
+    }
+    return out;
+  }
+  function rgbCss(rgb){ return 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')'; }
+  function pigmentMixToRgb(m){
+    var baseTotal=m.r+m.y+m.b;
+    var base=rybToRgb(m.r,m.y,m.b);
+    var total=baseTotal+m.w+m.k;
+    if(total<=0) return [238,232,216];
+    var out=[];
+    for(var i=0;i<3;i++){
+      out[i]=Math.round((base[i]*baseTotal + 246*m.w + 28*m.k)/total);
+    }
+    return out;
+  }
+  function fCurrentRGB(){ return pigmentMixToRgb(fMix); }
+  function fColorDistance(a,b){
+    var dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2];
+    return Math.sqrt(dr*dr*0.30 + dg*dg*0.59 + db*db*0.11);
+  }
+  function renderFMix(){
+    var rgb=fCurrentRGB();
+    $('fAdjustBox').style.background=rgbCss(rgb);
+    $('fMixLiquid').style.background=rgbCss(rgb);
+    $('fWheelCenter').style.background=rgbCss(rgb);
+    $('fRedCount').textContent=fMix.r+'방울';
+    $('fYellowCount').textContent=fMix.y+'방울';
+    $('fBlueCount').textContent=fMix.b+'방울';
+    $('fWhiteCount').textContent=fMix.w+'방울';
+    $('fBlackCount').textContent=fMix.k+'방울';
+    var total=fMix.r+fMix.y+fMix.b+fMix.w+fMix.k;
+    $('fMixRatio').textContent = total ? ('현재 '+total+'방울 혼합 중') : '아직 물감을 넣지 않았어요.';
+  }
+  function fResetMix(){
+    fMix={r:0,y:0,b:0,w:0,k:0}; renderFMix();
+    $('fFeedback').textContent=''; $('fFeedback').className='f-feedback';
+  }
+  function startFRound(){
+    var choices=[];
+    // 기본 색상은 2~3개의 유채색 안료를 섞고, 흰색/검정을 선택적으로 더해
+    // 파스텔·저채도·어두운 색까지 목표로 등장하게 합니다.
+    for(var r=0;r<=4;r++) for(var y=0;y<=4;y++) for(var b=0;b<=4;b++){
+      var base=r+y+b, used=(r>0)+(y>0)+(b>0);
+      if(base<3 || base>7 || used<2) continue;
+      for(var w=0;w<=3;w++) for(var k=0;k<=2;k++){
+        if(w>0 && k>0) continue;
+        var total=base+w+k;
+        if(total<=10) choices.push({r:r,y:y,b:b,w:w,k:k});
+      }
+    }
+    fTargetMix=choices[Math.floor(Math.random()*choices.length)];
+    fTargetRGB=pigmentMixToRgb(fTargetMix);
+    $('fTargetBox').style.background=rgbCss(fTargetRGB);
+    fResetMix();
+  }
+  function fAdd(which){
+    var total=fMix.r+fMix.y+fMix.b+fMix.w+fMix.k;
+    if(total>=F_MAX_DROPS){
+      $('fFeedback').textContent='한 번에 최대 '+F_MAX_DROPS+'방울까지 섞을 수 있어요. 필요하면 물통에 씻고 다시 시작하세요.';
+      $('fFeedback').className='f-feedback fail'; return;
+    }
+    fMix[which]++; renderFMix();
+    $('fFeedback').textContent=''; $('fFeedback').className='f-feedback';
+  }
+  $('fAddRed').addEventListener('click', function(){ fAdd('r'); });
+  $('fAddYellow').addEventListener('click', function(){ fAdd('y'); });
+  $('fAddBlue').addEventListener('click', function(){ fAdd('b'); });
+  $('fAddWhite').addEventListener('click', function(){ fAdd('w'); });
+  $('fAddBlack').addEventListener('click', function(){ fAdd('k'); });
+  $('fResetMixBtn').addEventListener('click', fResetMix);
+
+  $('fCheckBtn').addEventListener('click', function(){
+    if(fMix.r+fMix.y+fMix.b+fMix.w+fMix.k===0){ $('fFeedback').textContent='먼저 물감을 섞어보세요.'; $('fFeedback').className='f-feedback fail'; return; }
+    var diff=fColorDistance(fCurrentRGB(), fTargetRGB);
+    if(diff <= 24){
+      addMasterScore(fCurrentTeamIdx, '색 맞추기', 1);
+      renderFScoreBar();
+      $('fFeedback').textContent='🎉 거의 같은 색! '+fTeams[fCurrentTeamIdx].name+' +1점';
+      $('fFeedback').className='f-feedback success';
+      setTimeout(startFRound, 1000);
+    }else{
+      var hint = diff < 45 ? '아주 가까워요. 어느 물감이 조금 부족한지 살펴보세요.' : '목표 색과 차이가 있어요. 섞이는 변화를 보면서 조절해보세요.';
+      $('fFeedback').textContent=hint;
+      $('fFeedback').className='f-feedback fail';
+    }
+  });
+
+  $('fRankBtn').addEventListener('click', function(){
+    var sorted = fTeams.slice().sort(function(a,b){ return b.score - a.score; });
+    var list = $('fRankList'); list.innerHTML = '';
+    sorted.forEach(function(t, i){
+      var row=document.createElement('div'); row.className='rank-row'+(i===0?' first':'');
+      row.innerHTML='<div class="rk-name">'+(i===0?'👑 ':'')+(i+1)+'. '+t.name+'</div><div class="rk-score">'+(Math.round(t.score*10)/10).toFixed(1)+'점</div>';
+      list.appendChild(row);
+    });
+    switchScreen('f-rank');
+  });
+  $('fBackToPlayBtn').addEventListener('click', function(){ switchScreen('f-play'); });
+
+  /* =======================================================
+     G. 절대색감 (미묘한 색 타일 찾기)
+     ======================================================= */
+  var gTeams = [];
+  var gCurrentTeamIdx = 0;
+  var gLevel = 1;
+  var gGridN = 2;
+  var gOddIndex = 0;
+  var gBaseHue = 0;
+  var gScore = 0;
+  var gTimeLeft = 0;
+  var gTimeTotal = 0;
+  var gTimerId = null;
+  var gRunning = false;
+
+  $('gSetupNextBtn').addEventListener('click', function(){
+    gTeams = ensureMasterTeams(sharedConfig.groupCount);
+    gTeams.forEach(function(t){ if(t.gBest === undefined) t.gBest = 0; });
+    gCurrentTeamIdx = 0;
+    switchScreen('g-play');
+    resetGRunIdle();
+  });
+
+  function renderGScoreBar(){
+    var bar = $('gScoreBar');
+    bar.innerHTML = "";
+    gTeams.forEach(function(t, i){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'score-chip selectable' + (i===gCurrentTeamIdx ? ' current' : '');
+      chip.innerHTML = '<div class="sc-name">'+t.name+'</div><div class="sc-val">'+(t.gBest||0).toFixed(1)+'</div>';
+      chip.disabled = !!gRunning;
+      chip.addEventListener('click', function(){
+        if(gRunning) return;
+        gCurrentTeamIdx=i;
+        resetGRunIdle();
+      });
+      bar.appendChild(chip);
+    });
+  }
+  function renderGTeamTabs(){
+    renderTeamTabs('gTeamTabs', gTeams, gCurrentTeamIdx, function(i){
+      if(gRunning) return;
+      gCurrentTeamIdx=i; resetGRunIdle();
+    }, gRunning);
+  }
+
+  function resetGRunIdle(){
+    if(gTimerId){ clearInterval(gTimerId); gTimerId = null; }
+    gRunning = false;
+    renderGTeamTabs();
+    renderGScoreBar();
+    $('gIdleOverlay').style.display = 'flex';
+    $('gOverOverlay').style.display = 'none';
+    $('gIdleText').textContent = gTeams[gCurrentTeamIdx].name + ', 준비되면 시작하세요';
+    $('gLevelNum').textContent = '1';
+    $('gScoreNum').textContent = '0.0';
+    $('gGrid').innerHTML = '';
+    $('gTimerFill').style.width = '100%';
+  }
+
+  $('gStartBtn').addEventListener('click', function(){
+    gLevel = 1; gScore = 0; gRunning = true;
+    $('gIdleOverlay').style.display = 'none';
+    renderGTeamTabs();
+    $('gScoreNum').textContent = '0.0';
+    startGRound();
+  });
+
+  function startGRound(){
+    $('gLevelNum').textContent = gLevel;
+    gGridN = Math.min(6, 2 + Math.floor((gLevel-1)/3));
+    var total = gGridN * gGridN;
+    gOddIndex = Math.floor(Math.random() * total);
+    gBaseHue = Math.floor(Math.random() * 360);
+    var offset = Math.max(3, 18 - (gLevel-1) * 1.3);
+    if(Math.random() < 0.5) offset = -offset;
+    renderGGrid(total, offset);
+
+    gTimeTotal = Math.max(2.5, 8 - gLevel * 0.25);
+    gTimeLeft = gTimeTotal;
+    $('gTimerFill').style.width = '100%';
+    if(gTimerId){ clearInterval(gTimerId); }
+    gTimerId = setInterval(function(){
+      gTimeLeft -= 0.1;
+      var pct = Math.max(0, (gTimeLeft/gTimeTotal)*100);
+      $('gTimerFill').style.width = pct + '%';
+      if(gTimeLeft <= 0){
+        clearInterval(gTimerId); gTimerId = null;
+        gameOverG('시간 종료');
+      }
+    }, 100);
+  }
+
+  function renderGGrid(total, offset){
+    var grid = $('gGrid');
+    grid.style.gridTemplateColumns = 'repeat(' + gGridN + ', 1fr)';
+    grid.innerHTML = "";
+    for(var i=0;i<total;i++){
+      var tile = document.createElement('div');
+      tile.className = 'g-tile';
+      var lightness = 42 + (i === gOddIndex ? offset : 0);
+      tile.style.background = 'hsl(' + gBaseHue + ', 60%, ' + lightness + '%)';
+      tile.addEventListener('click', (function(idx){
+        return function(){ onGTileClick(idx); };
+      })(i));
+      grid.appendChild(tile);
+    }
+  }
+
+  function onGTileClick(idx){
+    if(!gRunning) return;
+    if(idx === gOddIndex){
+      var frac = Math.max(0, gTimeLeft / gTimeTotal);
+      var pts = 10 + frac * 10;
+      gScore += pts;
+      addMasterScore(gCurrentTeamIdx, '절대색감', Math.round(pts*10)/10);
+      $('gScoreNum').textContent = gScore.toFixed(1);
+      gLevel += 1;
+      startGRound();
+    } else {
+      // 오답은 즉시 종료하지 않고 현재 라운드의 시간을 깎는다.
+      gTimeLeft = Math.max(0, gTimeLeft - 1.5);
+      var pct = Math.max(0, (gTimeLeft/gTimeTotal)*100);
+      $('gTimerFill').style.width = pct + '%';
+      var tile = $('gGrid').children[idx];
+      if(tile){ tile.classList.add('wrong'); setTimeout(function(){ tile.classList.remove('wrong'); }, 320); }
+      $('gPenaltyNote').textContent = '오답! −1.5초';
+      $('gPenaltyNote').className = 'g-penalty-note flash';
+      setTimeout(function(){ if($('gPenaltyNote')){ $('gPenaltyNote').textContent='오답을 눌러도 끝나지 않지만 남은 시간이 1.5초 줄어듭니다.'; $('gPenaltyNote').className='g-penalty-note'; } }, 650);
+      if(gTimeLeft <= 0){
+        if(gTimerId){ clearInterval(gTimerId); gTimerId=null; }
+        gameOverG('시간 종료');
+      }
+    }
+  }
+
+  function gameOverG(reason){
+    gRunning = false;
+    if(gScore > gTeams[gCurrentTeamIdx].gBest){ gTeams[gCurrentTeamIdx].gBest = gScore; }
+    renderGScoreBar();
+    renderGTeamTabs();
+    $('gOverDetail').textContent = reason + ' · 최종 점수: ' + gScore.toFixed(1) + ' (레벨 ' + gLevel + ')';
+    $('gOverOverlay').style.display = 'flex';
+  }
+
+  $('gRetryBtn').addEventListener('click', function(){
+    $('gOverOverlay').style.display = 'none';
+    gLevel = 1; gScore = 0; gRunning = true;
+    $('gScoreNum').textContent = '0.0';
+    startGRound();
+  });
+  $('gNextTeamAfterOverBtn').addEventListener('click', function(){
+    resetGRunIdle();
+  });
+
+  $('gRankBtn').addEventListener('click', function(){
+    var sorted = gTeams.slice().sort(function(a,b){ return (b.gBest||0) - (a.gBest||0); });
+    var list = $('gRankList');
+    list.innerHTML = "";
+    sorted.forEach(function(t, i){
+      var row = document.createElement('div');
+      row.className = 'rank-row' + (i===0 ? ' first' : '');
+      row.innerHTML = '<div class="rk-name">' + (i===0?'👑 ':'') + (i+1) + '. ' + t.name + '</div><div class="rk-score">' + (t.gBest||0).toFixed(1) + '점</div>';
+      list.appendChild(row);
+    });
+    switchScreen('g-rank');
+  });
+  $('gBackToPlayBtn').addEventListener('click', function(){ switchScreen('g-play'); });
+
+  /* =======================================================
+     H. 도자기 빚기 (큰 물레 · 정밀 형태 판정)
+     ======================================================= */
+  var hTeams = [];
+  var hCurrentTeamIdx = 0;
+  var H_N = 42;
+  var H_TOP = 58, H_BOTTOM = 360;
+  var H_MINR = 14, H_MAXR = 126;
+  var hYs = [];
+  for(var _hi=0; _hi<H_N; _hi++){ hYs.push(H_TOP + _hi*(H_BOTTOM-H_TOP)/(H_N-1)); }
+  var hProfile = [], hTarget = [];
+  var hDragging = false, hLastPoint = null, hWheelRunning = true, hOverlay = false;
+
+  function hFlatProfile(){
+    var arr=[];
+    for(var i=0;i<H_N;i++){
+      var f=i/(H_N-1);
+      // 시작 덩어리도 살짝 항아리처럼 만들어 성형 감각을 살린다.
+      arr.push(47 + 8*Math.sin(Math.PI*f));
+    }
+    return arr;
+  }
+
+  function hRandomTargetProfile(){
+    // 병/항아리처럼 읽히는 목표를 생성: 좁은 입구, 목, 몸통, 안정된 굽.
+    var type=Math.floor(Math.random()*4);
+    var controls;
+    if(type===0) controls=[[0,28],[.10,34],[.23,47],[.48,92],[.72,105],[.90,72],[1,58]];
+    else if(type===1) controls=[[0,48],[.08,54],[.22,40],[.43,64],[.68,98],[.88,82],[1,62]];
+    else if(type===2) controls=[[0,36],[.12,39],[.28,55],[.50,108],[.72,104],[.90,78],[1,64]];
+    else controls=[[0,58],[.12,50],[.30,44],[.48,72],[.72,92],[.90,78],[1,66]];
+    var jitter=function(v,amt){ return Math.max(H_MINR,Math.min(H_MAXR,v+(Math.random()-.5)*amt)); };
+    controls=controls.map(function(c,idx){ return [c[0], jitter(c[1], idx===0?8:12)]; });
+    var arr=[];
+    for(var i=0;i<H_N;i++){
+      var f=i/(H_N-1), j=0;
+      while(j<controls.length-2 && f>controls[j+1][0]) j++;
+      var f0=controls[j][0], f1=controls[j+1][0], t=(f-f0)/(f1-f0);
+      // smoothstep으로 꺾임 없이 연결
+      t=t*t*(3-2*t);
+      arr.push(controls[j][1]+(controls[j+1][1]-controls[j][1])*t);
+    }
+    return arr;
+  }
+
+  function hProfileToPath(radii){
+    var cx=150;
+    var right=radii.map(function(r,i){return {x:cx+r,y:hYs[i]};});
+    var left=radii.map(function(r,i){return {x:cx-r,y:hYs[i]};});
+    var d='M '+left[0].x.toFixed(1)+' '+left[0].y.toFixed(1)+' ';
+    for(var i=0;i<left.length-1;i++){
+      var p0=left[i], p1=left[i+1], my=(p0.y+p1.y)/2;
+      d+='C '+p0.x.toFixed(1)+' '+my.toFixed(1)+' '+p1.x.toFixed(1)+' '+my.toFixed(1)+' '+p1.x.toFixed(1)+' '+p1.y.toFixed(1)+' ';
+    }
+    var rb=right[right.length-1]; d+='L '+rb.x.toFixed(1)+' '+rb.y.toFixed(1)+' ';
+    for(var j=right.length-2;j>=0;j--){
+      var q0=right[j+1], q1=right[j], qy=(q0.y+q1.y)/2;
+      d+='C '+q0.x.toFixed(1)+' '+qy.toFixed(1)+' '+q1.x.toFixed(1)+' '+qy.toFixed(1)+' '+q1.x.toFixed(1)+' '+q1.y.toFixed(1)+' ';
+    }
+    d+='Z'; return d;
+  }
+
+  function hRenderTarget(){
+    var d=hProfileToPath(hTarget);
+    $('hTargetPath').setAttribute('d',d);
+    $('hTargetOutline').setAttribute('d',d);
+    $('hTargetClipPath').setAttribute('d',d);
+    var rg=$('hTargetRidges'); rg.innerHTML='';
+    for(var y=70;y<=350;y+=10){
+      var line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1','28'); line.setAttribute('x2','272'); line.setAttribute('y1',y); line.setAttribute('y2',y);
+      line.setAttribute('class','h-ridge'); rg.appendChild(line);
+    }
+  }
+  function hRenderClay(){
+    var d=hProfileToPath(hProfile);
+    $('hClayPath').setAttribute('d',d);
+    $('hClayClipPath').setAttribute('d',d);
+    var rg=$('hClayRidges'); rg.innerHTML='';
+    for(var y=70;y<=350;y+=10){
+      var line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1','28'); line.setAttribute('x2','272'); line.setAttribute('y1',y); line.setAttribute('y2',y);
+      line.setAttribute('class','h-ridge'); rg.appendChild(line);
+    }
+  }
+
+  function renderHTeamTabs(){ /* 별도 조 탭은 사용하지 않음 */ }
+  function renderHScoreBar(){
+    renderScoreBar('hScoreBar', hCurrentTeamIdx, function(i){
+      hCurrentTeamIdx=i;
+      renderHScoreBar();
+      startHRound();
+    });
+  }
+  function startHRound(){
+    hTarget=hRandomTargetProfile(); hProfile=hFlatProfile(); hOverlay=false;
+    hRenderTarget(); hRenderClay();
+    $('hTargetOutline').classList.remove('show'); $('hOverlayBtn').classList.remove('active');
+    $('hFeedback').textContent=''; $('hFeedback').className='f-feedback';
+  }
+  $('hSetupNextBtn').addEventListener('click', function(){
+    hTeams=ensureMasterTeams(sharedConfig.groupCount); hCurrentTeamIdx=0;
+    switchScreen('h-play'); renderHTeamTabs(); renderHScoreBar(); startHRound();
+  });
+
+  function hLocalPoint(evt){
+    var svg=$('hClaySvg'), rect=svg.getBoundingClientRect();
+    return {x:(evt.clientX-rect.left)/rect.width*300, y:(evt.clientY-rect.top)/rect.height*440};
+  }
+  function hNearestIndex(y){
+    var ni=0, md=Infinity;
+    for(var i=0;i<H_N;i++){ var d=Math.abs(hYs[i]-y); if(d<md){md=d;ni=i;} }
+    return ni;
+  }
+  function hApplyBrush(point, previous){
+    var idx=hNearestIndex(point.y);
+    // 중심에서 멀어지면 당기기, 중심 쪽으로 움직이면 밀기. 첫 터치는 해당 폭을 직접 잡는다.
+    var center=150;
+    var side=point.x>=center?1:-1;
+    var targetR=Math.abs(point.x-center);
+    if(previous){
+      var prevR=Math.abs(previous.x-center);
+      var delta=(targetR-prevR)*0.72;
+      targetR=hProfile[idx]+delta;
+    }
+    targetR=Math.max(H_MINR,Math.min(H_MAXR,targetR));
+    var weights=[1,.86,.62,.38,.18,.07];
+    for(var k=-5;k<=5;k++){
+      var ii=idx+k; if(ii<0||ii>=H_N) continue;
+      var w=weights[Math.abs(k)];
+      hProfile[ii]=hProfile[ii]*(1-w)+targetR*w;
+    }
+    // 지나치게 울퉁불퉁하지 않도록 아주 약한 점토 자체의 평활화
+    var copy=hProfile.slice();
+    for(var j=1;j<H_N-1;j++) hProfile[j]=copy[j]*.82+(copy[j-1]+copy[j+1])*.09;
+    hRenderClay();
+  }
+
+  var hClaySvgEl=$('hClaySvg');
+  hClaySvgEl.addEventListener('pointerdown', function(e){
+    hDragging=true; hLastPoint=hLocalPoint(e); hClaySvgEl.setPointerCapture(e.pointerId); hApplyBrush(hLastPoint,null);
+  });
+  hClaySvgEl.addEventListener('pointermove', function(e){
+    if(!hDragging) return; var p=hLocalPoint(e); hApplyBrush(p,hLastPoint); hLastPoint=p;
+  });
+  hClaySvgEl.addEventListener('pointerup', function(){hDragging=false;hLastPoint=null;});
+  hClaySvgEl.addEventListener('pointercancel', function(){hDragging=false;hLastPoint=null;});
+
+  $('hResetBtn').addEventListener('click', function(){ hProfile=hFlatProfile(); hRenderClay(); $('hFeedback').textContent=''; });
+  $('hOverlayBtn').addEventListener('click', function(){
+    hOverlay=!hOverlay; $('hTargetOutline').classList.toggle('show',hOverlay); $('hOverlayBtn').classList.toggle('active',hOverlay);
+  });
+  $('hWheelBtn').addEventListener('click', function(){
+    hWheelRunning=!hWheelRunning; $('hWheelSpin').classList.toggle('spinning',hWheelRunning);
+    $('hWheelBtn').textContent=hWheelRunning?'⏸ 물레 정지':'▶ 물레 돌리기'; $('hWheelBtn').classList.toggle('active',hWheelRunning);
+  });
+
+  function hComputeMatch(){
+    var sq=0, maxDiff=0, edge=0;
+    for(var i=0;i<H_N;i++){
+      var d=Math.abs(hProfile[i]-hTarget[i]); sq+=d*d; if(d>maxDiff)maxDiff=d;
+      if(i===0 || i===H_N-1) edge+=d;
+    }
+    var rms=Math.sqrt(sq/H_N);
+    // 굴곡 매끄러움: 인접 기울기의 급격한 변화가 많으면 감점
+    var rough=0;
+    for(var j=1;j<H_N-1;j++) rough+=Math.abs((hProfile[j+1]-hProfile[j])-(hProfile[j]-hProfile[j-1]));
+    rough/=Math.max(1,H_N-2);
+    var shapeScore=Math.max(0,100-rms*1.55);
+    var roughPenalty=Math.max(0,(rough-2.2)*1.6);
+    var edgePenalty=(edge/2)*0.22;
+    var pct=Math.max(0,shapeScore-roughPenalty-edgePenalty);
+    return {pct:pct,rms:rms,maxDiff:maxDiff,rough:rough};
+  }
+
+  $('hCheckBtn').addEventListener('click', function(){
+    var m=hComputeMatch();
+    var pass=(m.pct>=85 && m.maxDiff<=24 && m.rough<=9);
+    if(pass){
+      addMasterScore(hCurrentTeamIdx,'도자기 빚기',1); renderHScoreBar();
+      $('hFeedback').textContent='🏺 완성! 정밀 일치도 '+m.pct.toFixed(0)+'% · '+hTeams[hCurrentTeamIdx].name+' +1점';
+      $('hFeedback').className='f-feedback success'; setTimeout(startHRound,1300);
+    }else{
+      var reason=m.maxDiff>24?'한 부분의 폭 차이가 너무 커요.':(m.rough>9?'표면 굴곡을 조금 더 매끄럽게 다듬어보세요.':'전체 실루엣을 목표에 조금 더 가깝게 맞춰보세요.');
+      $('hFeedback').textContent='정밀 일치도 '+m.pct.toFixed(0)+'% — '+reason+' (통과 85%)';
+      $('hFeedback').className='f-feedback fail';
+    }
+  });
+
+  $('hRankBtn').addEventListener('click', function(){
+    var sorted=hTeams.slice().sort(function(a,b){return b.score-a.score;}), list=$('hRankList'); list.innerHTML='';
+    sorted.forEach(function(t,i){var row=document.createElement('div');row.className='rank-row'+(i===0?' first':'');row.innerHTML='<div class="rk-name">'+(i===0?'👑 ':'')+(i+1)+'. '+t.name+'</div><div class="rk-score">'+(Math.round(t.score*10)/10).toFixed(1)+'점</div>';list.appendChild(row);});
+    switchScreen('h-rank');
+  });
+  $('hBackToPlayBtn').addEventListener('click', function(){switchScreen('h-play');});
+
+
+  /* =======================================================
+     I. 색 순서 기억
+     ======================================================= */
+  var iTeams=[], iCurrentTeamIdx=0, iSeq=[], iInput=[], iPlaying=false, iShowing=false, iLevel=0;
+  function iRenderScoreBar(){
+    renderScoreBar('iScoreBar', iCurrentTeamIdx, function(idx){
+      if(iShowing || iPlaying) return;
+      iCurrentTeamIdx=idx; iRenderScoreBar(); iReset();
+    }, iShowing || iPlaying);
+  }
+  function iReset(){
+    iSeq=[]; iInput=[]; iPlaying=false; iShowing=false; iLevel=0;
+    if($('iStatus')) $('iStatus').textContent='준비되면 시작하세요.';
+    if($('iStartBtn')) $('iStartBtn').disabled=false;
+    if(iTeams.length) iRenderScoreBar();
+  }
+  function iFlash(idx, ms){
+    var el=document.querySelector('.simon-pad[data-simon="'+idx+'"]');
+    if(!el) return;
+    el.classList.add('flash');
+    setTimeout(function(){ el.classList.remove('flash'); }, ms||380);
+  }
+  function iShowSequence(){
+    iShowing=true; iPlaying=false; iInput=[];
+    $('iStartBtn').disabled=true;
+    $('iStatus').textContent='LEVEL '+iLevel+' · 순서를 기억하세요';
+    var pos=0;
+    var timer=setInterval(function(){
+      if(pos>=iSeq.length){
+        clearInterval(timer);
+        setTimeout(function(){
+          iShowing=false; iPlaying=true;
+          $('iStatus').textContent='이제 같은 순서로 눌러보세요';
+        },450);
+        return;
+      }
+      iFlash(iSeq[pos],420); pos++;
+    },650);
+  }
+  function iNextLevel(){
+    iLevel++;
+    iSeq.push(Math.floor(Math.random()*4));
+    iShowSequence();
+  }
+  $('iStartBtn').addEventListener('click', function(){
+    iSeq=[]; iLevel=0; iNextLevel();
+  });
+  document.querySelectorAll('.simon-pad').forEach(function(pad){
+    pad.addEventListener('click', function(){
+      if(!iPlaying || iShowing) return;
+      var idx=parseInt(pad.dataset.simon,10);
+      iFlash(idx,180);
+      iInput.push(idx);
+      var pos=iInput.length-1;
+      if(iInput[pos]!==iSeq[pos]){
+        iPlaying=false;
+        $('iStatus').textContent='틀렸어요! LEVEL '+iLevel+' · 다시 도전 가능';
+        addMasterScore(iCurrentTeamIdx,'색 순서 기억',Math.max(0,iLevel-1));
+        iRenderScoreBar();
+        $('iStartBtn').disabled=false;
+        $('iStartBtn').textContent='다시 도전 ↺';
+        return;
+      }
+      if(iInput.length===iSeq.length){
+        iPlaying=false;
+        $('iStatus').textContent='정답! 다음 단계로 갑니다.';
+        setTimeout(iNextLevel,650);
+      }
+    });
+  });
+
+  /* =======================================================
+     J. 미술실 장애물 달리기
+     ======================================================= */
+  var jTeams=[], jCurrentTeamIdx=0, jRunning=false, jRAF=null, jLast=0, jScore=0;
+  var jBest=[0,0,0,0,0,0];
+  var jAwarded=[0,0,0,0,0,0]; // 최고거리 기준으로 이미 통합 스코어에 반영한 점수
+  var jPlayer={x:95,y:176,w:40,h:48,vy:0,onGround:true};
+  var jObstacles=[], jSpawn=0, jSpeed=300;
+  function jRenderScoreBar(){
+    renderScoreBar('jScoreBar',jCurrentTeamIdx,function(i){
+      if(jRunning) return;
+      jCurrentTeamIdx=i; jRenderScoreBar(); jUpdateHud();
+    },jRunning);
+  }
+  function jUpdateHud(){
+    var dist=Math.floor(jScore);
+    var best=Math.floor(jBest[jCurrentTeamIdx]||0);
+    var pts=Math.floor(best/100);
+    $('jScoreText').textContent='거리 '+dist+'m';
+    $('jBestText').textContent='BEST '+best+'m · '+pts+'점';
+  }
+  function jResetWorld(){
+    jScore=0; jSpeed=300; jSpawn=0; jObstacles=[];
+    jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; jLast=0;
+    jUpdateHud(); jDraw();
+  }
+  function jJump(){
+    if(!jRunning || !jPlayer.onGround) return;
+    jPlayer.vy=-640; jPlayer.onGround=false;
+  }
+  function jStopGame(){
+    jRunning=false;
+    if(jRAF){ cancelAnimationFrame(jRAF); jRAF=null; }
+  }
+  function jStart(){
+    jStopGame(); jResetWorld(); jRunning=true; jRenderScoreBar();
+    $('jStatus').textContent='달리는 중!';
+    $('jStartBtn').textContent='다시 시작';
+    jRAF=requestAnimationFrame(jLoop);
+  }
+  function jGameOver(){
+    jStopGame();
+    var final=Math.floor(jScore);
+    var isNewBest = final>(jBest[jCurrentTeamIdx]||0);
+
+    if(isNewBest){
+      jBest[jCurrentTeamIdx]=final;
+      var earned=Math.floor(final/100);
+      var already=jAwarded[jCurrentTeamIdx]||0;
+      var delta=Math.max(0,earned-already);
+      if(delta>0){
+        addMasterScore(jCurrentTeamIdx,'장애물 달리기',delta);
+        jAwarded[jCurrentTeamIdx]=earned;
+      }
+    }
+
+    var best=Math.floor(jBest[jCurrentTeamIdx]||0);
+    var pts=Math.floor(best/100);
+    $('jStatus').textContent = isNewBest
+      ? '새 최고기록! '+best+'m · 현재 환산 '+pts+'점'
+      : '충돌! '+final+'m · 최고기록 '+best+'m';
+    jRenderScoreBar(); jUpdateHud(); jDraw();
+  }
+  function jSpawnObstacle(){
+    var types=[
+      {w:22,h:58,label:'붓'},
+      {w:44,h:50,label:'이젤'},
+      {w:34,h:34,label:'물감통'},
+      {w:52,h:24,label:'팔레트'},
+      {w:30,h:48,label:'연필통'},
+      {w:38,h:42,label:'석고상'}
+    ];
+    var t=types[Math.floor(Math.random()*types.length)];
+    jObstacles.push({x:930,y:224-t.h,w:t.w,h:t.h,label:t.label});
+  }
+  function jLoop(ts){
+    if(!jRunning) return;
+    if(!jLast) jLast=ts;
+    var dt=Math.min(.035,(ts-jLast)/1000); jLast=ts;
+    jScore += dt*18;
+    jSpeed = Math.min(620,300+jScore*2.2);
+    jSpawn -= dt;
+    if(jSpawn<=0){ jSpawnObstacle(); jSpawn=0.85+Math.random()*0.75; }
+
+    jPlayer.vy += 1700*dt;
+    jPlayer.y += jPlayer.vy*dt;
+    if(jPlayer.y>=178){ jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; }
+
+    for(var i=jObstacles.length-1;i>=0;i--){
+      var o=jObstacles[i]; o.x -= jSpeed*dt;
+      if(o.x+o.w<0) jObstacles.splice(i,1);
+      else if(jPlayer.x<o.x+o.w && jPlayer.x+jPlayer.w>o.x &&
+              jPlayer.y<o.y+o.h && jPlayer.y+jPlayer.h>o.y){
+        jGameOver(); return;
+      }
+    }
+    jUpdateHud(); jDraw();
+    jRAF=requestAnimationFrame(jLoop);
+  }
+  function jDraw(){
+    var c=$('jCanvas'); if(!c) return;
+    var ctx=c.getContext('2d'), W=c.width, H=c.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#141923'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#20242c'; ctx.fillRect(0,224,W,H-224);
+    ctx.strokeStyle='#3a3f49'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,224); ctx.lineTo(W,224); ctx.stroke();
+
+    // 픽셀 학생 캐릭터
+    var px=jPlayer.x, py=jPlayer.y;
+    // 다리
+    ctx.fillStyle='#26354d';
+    ctx.fillRect(px+8,py+34,8,12);
+    ctx.fillRect(px+24,py+34,8,12);
+    // 운동화
+    ctx.fillStyle='#f3f3ef';
+    ctx.fillRect(px+5,py+43,12,5);
+    ctx.fillRect(px+23,py+43,13,5);
+    // 몸통(교복/후드 느낌)
+    ctx.fillStyle='#5FD9FF';
+    ctx.fillRect(px+7,py+17,27,19);
+    // 팔
+    ctx.fillStyle='#efc29f';
+    ctx.fillRect(px+2,py+20,7,14);
+    ctx.fillRect(px+33,py+19,7,14);
+    // 머리
+    ctx.fillStyle='#efc29f';
+    ctx.fillRect(px+11,py+2,22,17);
+    // 머리카락
+    ctx.fillStyle='#33261f';
+    ctx.fillRect(px+10,py,24,7);
+    ctx.fillRect(px+10,py+5,5,9);
+    // 눈
+    ctx.fillStyle='#202020';
+    ctx.fillRect(px+27,py+9,3,3);
+    // 책가방
+    ctx.fillStyle='#B18CFF';
+    ctx.fillRect(px+2,py+18,8,18);
+
+    jObstacles.forEach(function(o){
+      ctx.fillStyle='#FFB454';
+
+      if(o.label==='붓'){
+        ctx.fillStyle='#d4a06c';
+        ctx.fillRect(o.x+9,o.y+14,5,o.h-14);
+        ctx.fillStyle='#d95d62';
+        ctx.beginPath();
+        ctx.moveTo(o.x+5,o.y+16);
+        ctx.lineTo(o.x+18,o.y+16);
+        ctx.lineTo(o.x+12,o.y);
+        ctx.closePath(); ctx.fill();
+
+      }else if(o.label==='이젤'){
+        ctx.fillStyle='#d2a679';
+        ctx.fillRect(o.x+6,o.y+4,32,29);
+        ctx.fillStyle='#577ca8';
+        ctx.fillRect(o.x+10,o.y+8,24,20);
+        ctx.strokeStyle='#b88354'; ctx.lineWidth=5;
+        ctx.beginPath();
+        ctx.moveTo(o.x+10,o.y+31); ctx.lineTo(o.x+2,o.y+o.h);
+        ctx.moveTo(o.x+34,o.y+31); ctx.lineTo(o.x+42,o.y+o.h);
+        ctx.stroke();
+
+      }else if(o.label==='물감통'){
+        ctx.fillStyle='#e7e3dc';
+        ctx.fillRect(o.x,o.y+7,o.w,o.h-7);
+        ctx.fillStyle='#E66B6B';
+        ctx.fillRect(o.x+3,o.y+11,o.w-6,10);
+        ctx.fillStyle='#9d9a94';
+        ctx.fillRect(o.x+3,o.y,o.w-6,7);
+
+      }else if(o.label==='팔레트'){
+        ctx.fillStyle='#d9ad73';
+        ctx.beginPath();
+        ctx.ellipse(o.x+o.w/2,o.y+o.h/2,o.w/2,o.h/2,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#20242c';
+        ctx.beginPath(); ctx.arc(o.x+o.w-13,o.y+8,5,0,Math.PI*2); ctx.fill();
+        ['#e85d5d','#f1cf4d','#4f83d1','#69ad67'].forEach(function(col,idx){
+          ctx.fillStyle=col;
+          ctx.beginPath();
+          ctx.arc(o.x+10+idx*9,o.y+15-(idx%2)*5,4,0,Math.PI*2); ctx.fill();
+        });
+
+      }else if(o.label==='연필통'){
+        ctx.fillStyle='#6f8f70';
+        ctx.fillRect(o.x+3,o.y+13,o.w-6,o.h-13);
+        ctx.fillStyle='#f3d65c';
+        ctx.fillRect(o.x+7,o.y,4,20);
+        ctx.fillStyle='#dd6969';
+        ctx.fillRect(o.x+14,o.y+3,4,18);
+        ctx.fillStyle='#69a1dd';
+        ctx.fillRect(o.x+21,o.y+1,4,19);
+
+      }else if(o.label==='석고상'){
+        ctx.fillStyle='#dedbd3';
+        ctx.fillRect(o.x+8,o.y+4,o.w-16,15);
+        ctx.fillRect(o.x+5,o.y+18,o.w-10,16);
+        ctx.fillRect(o.x+2,o.y+34,o.w-4,8);
+        ctx.fillStyle='#aaa79f';
+        ctx.fillRect(o.x+10,o.y+9,5,3);
+      }
+    });
+  }
+  $('jStartBtn').addEventListener('click',jStart);
+  $('jCanvas').addEventListener('pointerdown',function(){ if(!jRunning) jStart(); else jJump(); });
+  document.addEventListener('keydown',function(e){
+    if($('screen-j-play').hidden) return;
+    if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); if(!jRunning) jStart(); else jJump(); }
+  });
+
+  renderCGallery();
+  renderEActivityList();
+  switchScreen('home');
+})();
+</script>
+</body>
+</html>
