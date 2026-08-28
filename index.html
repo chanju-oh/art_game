@@ -23,7 +23,7 @@
   .screen[hidden]{ display:none; }
   .disp{ font-family:'Do Hyeon',sans-serif; font-weight:400; }
 
-  .home-back{ position:absolute; top:clamp(14px,2vw,28px); left:clamp(14px,2vw,28px); z-index:5;
+  .home-back{ position:absolute; top:clamp(14px,2vw,28px); left:clamp(14px,2vw,28px); z-index:50;
     background:var(--panel); border:1px solid var(--panel-line); color:var(--muted);
     padding:8px 14px; border-radius:10px; font-size:13px; cursor:pointer; }
   .home-back:hover{ color:var(--text); }
@@ -266,6 +266,11 @@
   .score-chip .sc-name{ font-size:12px; color:var(--muted); font-weight:700; }
   .score-chip .sc-val{ font-family:'Do Hyeon',sans-serif; font-size:20px; color:var(--text); }
   .score-chip.current .sc-val{ color:var(--accent); }
+  .score-bar-divider{ width:1px; align-self:stretch; min-height:36px; background:var(--panel-line); margin:2px 4px; }
+  .score-chip.individual-chip{ border-color:#4FD9C6; background:linear-gradient(180deg,var(--panel),rgba(79,217,198,.08)); }
+  .score-chip.individual-chip .sc-name{ color:#4FD9C6; }
+  .score-chip.individual-chip .sc-val{ color:#4FD9C6; }
+  @media (max-width:480px){ .score-bar-divider{ display:none; } }
 
   /* ---- direct team selector ---- */
   .team-tabs{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:6px auto 14px; width:100%; max-width:620px; }
@@ -541,6 +546,7 @@
     <div class="class-mode-bar">
       <div class="class-mode-status">현재 활동 · <b id="classModeLabel">명화 퍼즐 만들기</b></div>
       <button class="class-code-btn" id="classCodeOpenBtn">🔑 활동 코드 입력</button>
+      <button class="class-code-btn" id="fullResetOpenBtn" title="다른 반 수업을 시작하기 전, 이 태블릿의 조별·개별 점수를 모두 초기화합니다.">🧹 이 태블릿 점수 초기화</button>
     </div>
     <div class="menu-grid">
       <div class="menu-card c" id="goC">
@@ -648,6 +654,12 @@
         <div class="teacher-tool-desc">게임 통합점수와 연결되지 않는 독립 보드입니다. 즉석 활동이나 예비 점수 기록용으로 사용합니다.</div>
         <div class="backup-score-grid" id="eBackupScoreGrid"></div>
         <button class="backup-reset" id="eBackupResetBtn">예비 점수 전체 초기화</button>
+      </div>
+
+      <div class="teacher-tool-card">
+        <div class="teacher-tool-title">🧹 새 학급 시작</div>
+        <div class="teacher-tool-desc">이 태블릿에 저장된 게임 통합 조별 점수, 개별(태블릿) 점수, 명화 퍼즐 완료 기록을 한 번에 초기화합니다. 다른 반 수업을 시작하기 전에 눌러주세요.</div>
+        <button class="backup-reset" id="eFullResetBtn" style="border-color:#5a2222; color:#ffb0b0;">🗑️ 조별·개별 점수 전체 초기화</button>
       </div>
 
       <div class="teacher-tool-card">
@@ -1036,9 +1048,12 @@
     <div class="runner-shell">
       <div class="runner-hud"><div class="runner-score" id="jScoreText">거리 0m</div><div style="color:var(--muted);font-size:12px;" id="jBestText">BEST 0m · 0점</div></div>
       <canvas id="jCanvas" class="runner-canvas" width="900" height="260"></canvas>
-      <div class="runner-help">스페이스바 · ↑ · 화면 클릭 = 점프 · 최고거리 100m마다 1점 (최고기록 기준, 중복 가산 없음)</div>
+      <div class="runner-help">스페이스바 · ↑ · 화면 클릭 = 점프(바닥 장애물) · ↓ 또는 숙이기 버튼 = 숙이기(날아오는 붓·볼펜) · 최고거리 100m마다 1점, 갈수록 난이도 상승</div>
       <div class="game-status" id="jStatus">준비되면 시작하세요.</div>
-      <div class="play-controls"><button class="btn btn-run" id="jStartBtn">달리기 시작 ▶</button></div>
+      <div class="play-controls">
+        <button class="btn btn-run" id="jStartBtn">달리기 시작 ▶</button>
+        <button class="btn btn-sub" id="jDuckBtn">⬇️ 숙이기 (누르고 있기)</button>
+      </div>
     </div>
   </section>
 
@@ -1116,6 +1131,48 @@
     return masterTeams;
   }
 
+  // ---- 개별(이 태블릿) 점수 : 조별 점수와 별개로, 이 기기에서 게임으로 직접 획득한 점수의 누적 합계 ----
+  // 교사에게 실시간으로 공유되는 시스템은 아니며, 이 태블릿 안에서만 기록/표시됩니다.
+  var INDIVIDUAL_SCORE_KEY = 'artArcade_individual_score_v1';
+  var individualScore = (function(){
+    try{
+      var v = parseFloat(localStorage.getItem(INDIVIDUAL_SCORE_KEY));
+      return isFinite(v) ? v : 0;
+    }catch(e){ return 0; }
+  })();
+  function saveIndividualScore(){
+    try{ localStorage.setItem(INDIVIDUAL_SCORE_KEY, String(individualScore)); }catch(e){}
+  }
+  function addIndividualScore(delta){
+    individualScore = Math.round((individualScore + (Number(delta)||0)) * 10) / 10;
+    saveIndividualScore();
+    refreshIndividualScoreUI();
+  }
+  function refreshIndividualScoreUI(){
+    document.querySelectorAll('.indiv-score-val').forEach(function(el){
+      el.textContent = individualScore;
+    });
+  }
+
+  // ---- 다른 반으로 넘어갈 때 이 태블릿의 조별/개별 점수·진행 기록을 한 번에 초기화 ----
+  function resetAllLocalScores(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        masterScores: new Array(sharedConfig.groupCount).fill(0),
+        puzzleSolvedByTeam: {}
+      }));
+    }catch(e){}
+    try{ localStorage.setItem(INDIVIDUAL_SCORE_KEY, '0'); }catch(e){}
+    masterTeams.forEach(function(t){ t.score = 0; });
+    cSolvedByTeam = {};
+    eLog = [];
+    individualScore = 0;
+    refreshIndividualScoreUI();
+    if($('screen-e-main') && !$('screen-e-main').hidden){
+      renderETeamList(); renderELog();
+    }
+  }
+
   function addMasterScore(teamIdx, activity, delta){
     if(!masterTeams[teamIdx]) return;
     masterTeams[teamIdx].score += delta;
@@ -1131,19 +1188,18 @@
   // 이미지 주소를 직접 추측해서 하드코딩하지 않고, 위키피디아 공식 API로 그때그때 최신 주소를 받아옴
   var PRESET_PAINTINGS = [
     { title:"다빈치 · 모나리자", artist:"레오나르도 다 빈치", level:"쉬움", wiki:"Mona_Lisa" },
-    { title:"고흐 · 별이 빛나는 밤", artist:"빈센트 반 고흐", level:"쉬움", wiki:"The_Starry_Night" },
+    { title:"고흐 · 별이 빛나는 밤", artist:"빈센트 반 고흐", level:"쉬움", wiki:"The_Starry_Night",
+      // 학교 네트워크 등에서 위키백과 API가 불안정하게 응답하면 조각 일부가 빈 이미지로 보이는 문제가 있어
+      // 이 작품만은 안정적인 위키미디어 공용 저장소의 고정 원본 주소를 우선 사용하도록 지정합니다.
+      direct:"https://upload.wikimedia.org/wikipedia/commons/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg" },
     { title:"뭉크 · 절규", artist:"에드바르 뭉크", level:"쉬움", wiki:"The_Scream" },
     { title:"호쿠사이 · 가나가와 파도", artist:"가쓰시카 호쿠사이", level:"쉬움", wiki:"The_Great_Wave_off_Kanagawa" },
     { title:"밀레 · 이삭 줍는 사람들", artist:"장프랑수아 밀레", level:"적당함", wiki:"The_Gleaners" },
-    { title:"베르메르 · 진주 귀걸이를 한 소녀", artist:"요하네스 베르메르", level:"적당함", wiki:"Girl_with_a_Pearl_Earring" },
     { title:"클림트 · 키스", artist:"구스타프 클림트", level:"적당함", wiki:"The_Kiss_(Klimt)" },
     { title:"모네 · 인상, 해돋이", artist:"클로드 모네", level:"적당함", wiki:"Impression,_Sunrise" },
     { title:"고흐 · 해바라기", artist:"빈센트 반 고흐", level:"쉬움", wiki:"Sunflowers_(Van_Gogh_series)" },
     { title:"쇠라 · 그랑드자트섬의 일요일 오후", artist:"조르주 쇠라", level:"도전", wiki:"A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte" },
-
-    { title:"피카소 · 게르니카", artist:"파블로 피카소", level:"도전", wiki:"Guernica_(Picasso)" },    { title:"달리 · 기억의 지속", artist:"살바도르 달리", level:"도전", wiki:"The_Persistence_of_Memory" },
-    { title:"몬드리안 · 빨강, 파랑, 노랑의 구성", artist:"피트 몬드리안", level:"쉬움", wiki:"Composition_with_Red_Blue_and_Yellow" },
-    { title:"칸딘스키 · 구성 8", artist:"바실리 칸딘스키", level:"도전", wiki:"Composition_8_(Kandinsky)" }
+    { title:"달리 · 기억의 지속", artist:"살바도르 달리", level:"도전", wiki:"The_Persistence_of_Memory" }
   ];
 
   var MEMORY_ASSETS = PRESET_PAINTINGS.slice().concat([
@@ -1168,13 +1224,22 @@
     '<text x="50%" y="50%" fill="#8A8D98" font-size="18" text-anchor="middle" dy=".3em">이미지 없음</text></svg>'
   );
   var paintingImageCache = {};
+  function testImageLoads(url, cb){
+    var img = new Image();
+    var done = false;
+    img.onload = function(){ if(done) return; done = true; cb(true); };
+    img.onerror = function(){ if(done) return; done = true; cb(false); };
+    img.src = url;
+    // 이미지 응답이 오지 않고 멈춰버리는 경우를 대비한 안전장치
+    setTimeout(function(){ if(done) return; done = true; cb(false); }, 7000);
+  }
   function fetchPaintingImage(entry, cb){
-    if(paintingImageCache[entry.wiki] !== undefined){ cb(paintingImageCache[entry.wiki]); return; }
+    if(paintingImageCache[entry.wiki]){ cb(paintingImageCache[entry.wiki]); return; }
     var tries = [];
     if(entry.wikiKo) tries.push('https://ko.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(entry.wikiKo));
     tries.push('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(entry.wiki));
     function tryAt(i){
-      if(i >= tries.length){ paintingImageCache[entry.wiki] = null; cb(null); return; }
+      if(i >= tries.length){ cb(null); return; } // 실패는 캐시에 남기지 않아 다음 시도에서 다시 받아옵니다.
       fetch(tries[i])
         .then(function(res){ if(!res.ok) throw new Error('bad status'); return res.json(); })
         .then(function(data){
@@ -1184,6 +1249,15 @@
           cb(url);
         })
         .catch(function(){ tryAt(i+1); });
+    }
+    // 특정 작품(예: 별이 빛나는 밤)은 학교 네트워크에서 위키백과 API 응답이 불안정할 때
+    // 조각 이미지가 깨져 보이는 문제가 있었기 때문에, 검증된 고정 원본 주소가 있으면 그것부터 사용합니다.
+    if(entry.direct){
+      testImageLoads(entry.direct, function(ok){
+        if(ok){ paintingImageCache[entry.wiki] = entry.direct; cb(entry.direct); }
+        else{ tryAt(0); }
+      });
+      return;
     }
     tryAt(0);
   }
@@ -1306,11 +1380,21 @@
   $('classCodeModal').addEventListener('click',function(e){if(e.target===$('classCodeModal'))closeClassCodeModal();});
   refreshClassModeUI();
 
+  $('fullResetOpenBtn').addEventListener('click', function(){
+    var pin=prompt('다른 반으로 넘어가시나요?\n이 태블릿의 조별 점수·개별 점수·완료 기록이 모두 초기화됩니다.\n계속하려면 교사용 PIN을 입력하세요.');
+    if(pin===null) return;
+    if(String(pin).trim()!==TEACHER_PIN){ showClassNotice('교사용 PIN이 맞지 않습니다.'); return; }
+    if(!confirm('정말 이 태블릿의 모든 조별 점수와 개별 점수, 완료 기록을 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+    resetAllLocalScores();
+    showClassNotice('✅ 이 태블릿의 점수와 기록이 모두 초기화되었습니다.');
+  });
+
   $('goC').addEventListener('click', function(){
     if(!requireClassGame('c')) return;
     root.style.setProperty('--accent', '#B18CFF');
     cGridN = 5;
     switchScreen('c-setup');
+    renderCGallery(); // 다른 화면에 다녀온 뒤에도(예: 점수 초기화 직후) 최신 점수·완료 상태로 보이도록 매번 다시 그립니다.
   });
   $('goD1').addEventListener('click', function(){
     if(!requireClassGame('d1')) return;
@@ -1373,15 +1457,11 @@
     "The_Scream":"불안과 공포 같은 강한 감정을 과장된 인물과 뒤틀린 풍경으로 표현한 표현주의의 대표작입니다.",
     "The_Great_Wave_off_Kanagawa":"거대한 파도와 작은 배, 멀리 보이는 후지산의 대비가 인상적인 일본 우키요에 목판화입니다.",
     "The_Gleaners":"들판에서 이삭을 줍는 농민들의 일상을 차분하고 묵직하게 표현한 사실주의 작품입니다.",
-    "Girl_with_a_Pearl_Earring":"어두운 배경 속 인물의 시선과 빛나는 진주 귀걸이가 강조된 베르메르의 대표적인 인물화입니다.",
     "The_Kiss_(Klimt)":"금빛 장식과 반복되는 문양 속에서 두 인물을 화려하고 평면적인 장식성으로 표현한 작품입니다.",
     "Impression,_Sunrise":"빛과 대기의 순간적인 인상을 빠른 붓질과 색으로 담아낸 인상주의의 이름이 된 작품입니다.",
     "Sunflowers_(Van_Gogh_series)":"노란색을 중심으로 해바라기의 생명력과 질감을 강한 붓질로 표현한 고흐의 연작입니다.",
     "A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte":"작은 색점을 나란히 찍어 화면에서 색이 섞여 보이게 한 점묘법의 대표적인 작품입니다.",
-    "Guernica_(Picasso)":"전쟁의 참상을 흑백에 가까운 색과 분해된 형태로 표현한 피카소의 대형 반전 작품입니다.",
-    "The_Persistence_of_Memory":"녹아내리는 시계처럼 현실에서는 불가능한 장면을 통해 꿈과 시간의 느낌을 표현한 초현실주의 작품입니다.",
-    "Composition_with_Red_Blue_and_Yellow":"수직·수평선과 기본색만으로 화면의 질서와 균형을 탐구한 몬드리안의 추상 작품입니다.",
-    "Composition_8_(Kandinsky)":"원·선·삼각형 등 다양한 기하학 형태와 색을 음악의 리듬처럼 구성한 추상 작품입니다."
+    "The_Persistence_of_Memory":"녹아내리는 시계처럼 현실에서는 불가능한 장면을 통해 꿈과 시간의 느낌을 표현한 초현실주의 작품입니다."
   };
 
   /* =======================================================
@@ -1638,6 +1718,7 @@
     if(firstScore){
       cSolvedByTeam[cCurrentTeamIdx].push(cCurrentWiki);
       addMasterScore(cCurrentTeamIdx, '명화 퍼즐 · ' + cCurrentPainting.level, puzzleScore);
+      addIndividualScore(puzzleScore);
     }else{
       // 재플레이 기록은 득점하지 않지만 완료 상태는 그대로 유지합니다.
       saveArcadeState();
@@ -1720,6 +1801,17 @@
       }
       bar.appendChild(chip);
     });
+    appendIndividualScoreChip(bar);
+  }
+  // 조별 점수 옆에, 지금 이 태블릿에서 게임으로 직접 획득한 개별 누적 점수를 함께 보여줍니다.
+  function appendIndividualScoreChip(bar){
+    var divider = document.createElement('div');
+    divider.className = 'score-bar-divider';
+    bar.appendChild(divider);
+    var chip = document.createElement('div');
+    chip.className = 'score-chip individual-chip';
+    chip.innerHTML = '<div class="sc-name">📱 이 태블릿 개별 점수</div><div class="sc-val indiv-score-val">'+individualScore+'</div>';
+    bar.appendChild(chip);
   }
 
   $('d1SetupNextBtn').addEventListener('click', function(){
@@ -1822,6 +1914,7 @@
           dMemDeck[i1].matched = true;
           dMemDeck[i2].matched = true;
           addMasterScore(dMemCurrentTeam, '카드 뒤집기', 1);
+          addIndividualScore(1);
           dMemFlipped = [];
           dMemLock = false;
           renderDScoreBar();
@@ -1920,6 +2013,12 @@
   $('eBackupResetBtn').addEventListener('click', function(){
     eBackupScores = [0,0,0,0,0,0];
     renderEBackupScores();
+  });
+
+  $('eFullResetBtn').addEventListener('click', function(){
+    if(!confirm('이 태블릿의 조별 점수, 개별 점수, 명화 퍼즐 완료 기록을 모두 초기화할까요?\n다른 반 수업을 시작할 때만 사용하세요. 되돌릴 수 없습니다.')) return;
+    resetAllLocalScores();
+    showClassNotice('✅ 이 태블릿의 점수와 기록이 모두 초기화되었습니다.');
   });
 
   // ---- teacher tab: stopwatch (count up) ----
@@ -2257,6 +2356,7 @@
     var diff=fColorDistance(fCurrentRGB(), fTargetRGB);
     if(diff <= 24){
       addMasterScore(fCurrentTeamIdx, '색 맞추기', 1);
+      addIndividualScore(1);
       renderFScoreBar();
       $('fFeedback').textContent='🎉 거의 같은 색! '+fTeams[fCurrentTeamIdx].name+' +1점';
       $('fFeedback').className='f-feedback success';
@@ -2319,6 +2419,7 @@
       });
       bar.appendChild(chip);
     });
+    appendIndividualScoreChip(bar);
   }
   function renderGTeamTabs(){
     renderTeamTabs('gTeamTabs', gTeams, gCurrentTeamIdx, function(i){
@@ -2397,6 +2498,7 @@
       var pts = 10 + frac * 10;
       gScore += pts;
       addMasterScore(gCurrentTeamIdx, '절대색감', Math.round(pts*10)/10);
+      addIndividualScore(Math.round(pts*10)/10);
       $('gScoreNum').textContent = gScore.toFixed(1);
       gLevel += 1;
       startGRound();
@@ -2629,7 +2731,7 @@
     var m=hComputeMatch();
     var pass=(m.pct>=85 && m.maxDiff<=24 && m.rough<=9);
     if(pass){
-      addMasterScore(hCurrentTeamIdx,'도자기 빚기',1); renderHScoreBar();
+      addMasterScore(hCurrentTeamIdx,'도자기 빚기',1); addIndividualScore(1); renderHScoreBar();
       $('hFeedback').textContent='🏺 완성! 정밀 일치도 '+m.pct.toFixed(0)+'% · '+hTeams[hCurrentTeamIdx].name+' +1점';
       $('hFeedback').className='f-feedback success'; setTimeout(startHRound,1300);
     }else{
@@ -2705,6 +2807,7 @@
         iPlaying=false;
         $('iStatus').textContent='틀렸어요! LEVEL '+iLevel+' · 다시 도전 가능';
         addMasterScore(iCurrentTeamIdx,'색 순서 기억',Math.max(0,iLevel-1));
+        addIndividualScore(Math.max(0,iLevel-1));
         iRenderScoreBar();
         $('iStartBtn').disabled=false;
         $('iStartBtn').textContent='다시 도전 ↺';
@@ -2724,8 +2827,89 @@
   var jTeams=[], jCurrentTeamIdx=0, jRunning=false, jRAF=null, jLast=0, jScore=0;
   var jBest=[0,0,0,0,0,0];
   var jAwarded=[0,0,0,0,0,0]; // 최고거리 기준으로 이미 통합 스코어에 반영한 점수
-  var jPlayer={x:95,y:176,w:40,h:48,vy:0,onGround:true};
-  var jObstacles=[], jSpawn=0, jSpeed=300;
+  var jGroundY=224, jDuckH=30;
+  var jPlayer={x:95,y:176,w:40,h:48,vy:0,onGround:true,ducking:false};
+  var jObstacles=[], jSpawn=0, jSpeed=300, jDelayed=[], jTier=0;
+
+  // 지면 장애물(점프로 피함)
+  var J_GROUND_TYPES=[
+    {w:22,h:58,label:'붓'},
+    {w:44,h:50,label:'이젤'},
+    {w:34,h:34,label:'물감통'},
+    {w:52,h:24,label:'팔레트'},
+    {w:30,h:48,label:'연필통'},
+    {w:38,h:42,label:'석고상'}
+  ];
+  // 상단에서 날아오는 장애물(숙여서 피함) — 볼펜 / 붓
+  var J_FLY_TYPES=[
+    {w:42,h:16,label:'날아오는 붓',  flyY:148},
+    {w:34,h:12,label:'날아오는 볼펜', flyY:158}
+  ];
+  function jPickGround(){ return J_GROUND_TYPES[Math.floor(Math.random()*J_GROUND_TYPES.length)]; }
+  function jPickFly(){ return J_FLY_TYPES[Math.floor(Math.random()*J_FLY_TYPES.length)]; }
+
+  // 난이도가 오를수록 더 다양하고 촘촘한 패턴이 섞여 나오도록 조합을 구성합니다.
+  var J_PATTERNS = {
+    single:      function(){ return [{dt:0,kind:'ground',spec:jPickGround()}]; },
+    singleFly:   function(){ return [{dt:0,kind:'fly',spec:jPickFly()}]; },
+    doubleGround:function(){ return [{dt:0,kind:'ground',spec:jPickGround()},{dt:0.40,kind:'ground',spec:jPickGround()}]; },
+    groundThenFly:function(){ return [{dt:0,kind:'ground',spec:jPickGround()},{dt:0.52,kind:'fly',spec:jPickFly()}]; },
+    flyThenGround:function(){ return [{dt:0,kind:'fly',spec:jPickFly()},{dt:0.50,kind:'ground',spec:jPickGround()}]; },
+    tripleRhythm:function(){
+      var g=jPickGround();
+      return [{dt:0,kind:'ground',spec:g},{dt:0.32,kind:'ground',spec:g},{dt:0.64,kind:'ground',spec:g}];
+    },
+    hardMix:function(){
+      return [
+        {dt:0,   kind:'fly',   spec:jPickFly()},
+        {dt:0.30,kind:'ground',spec:jPickGround()},
+        {dt:0.70,kind:'fly',   spec:jPickFly()},
+        {dt:0.98,kind:'ground',spec:jPickGround()}
+      ];
+    }
+  };
+  var J_TIER_POOLS=[
+    ['single'],                                                        // Lv.1 : 지면 장애물만, 여유있게
+    ['single','single','singleFly'],                                   // Lv.2 : 날아오는 장애물 등장
+    ['single','singleFly','doubleGround','groundThenFly'],             // Lv.3 : 조합 패턴 시작
+    ['singleFly','doubleGround','groundThenFly','flyThenGround','tripleRhythm'], // Lv.4
+    ['doubleGround','groundThenFly','flyThenGround','tripleRhythm','hardMix']    // Lv.5 : 최고 난이도
+  ];
+  var J_TIER_LABELS=['Lv.1','Lv.2','Lv.3','Lv.4','Lv.5'];
+  var J_TIER_COOLDOWN=[[0.95,1.65],[0.82,1.45],[0.68,1.2],[0.56,0.98],[0.46,0.82]];
+
+  function jTierForDistance(d){
+    if(d<110) return 0;
+    if(d<250) return 1;
+    if(d<430) return 2;
+    if(d<650) return 3;
+    return 4;
+  }
+  function jCooldownForTier(tier){
+    var r=J_TIER_COOLDOWN[tier]||J_TIER_COOLDOWN[J_TIER_COOLDOWN.length-1];
+    return r[0]+Math.random()*(r[1]-r[0]);
+  }
+  function jQueuePattern(){
+    jTier = jTierForDistance(jScore);
+    var pool = J_TIER_POOLS[jTier]||J_TIER_POOLS[J_TIER_POOLS.length-1];
+    var name = pool[Math.floor(Math.random()*pool.length)];
+    var entries = J_PATTERNS[name]();
+    var maxDt=0;
+    entries.forEach(function(e){
+      jDelayed.push({t:e.dt,kind:e.kind,spec:e.spec});
+      if(e.dt>maxDt) maxDt=e.dt;
+    });
+    jSpawn = maxDt + jCooldownForTier(jTier);
+  }
+  function jSpawnFromEntry(entry){
+    var t=entry.spec;
+    if(entry.kind==='fly'){
+      jObstacles.push({x:930,y:t.flyY,w:t.w,h:t.h,label:t.label,kind:'fly',spin:Math.random()*6});
+    }else{
+      jObstacles.push({x:930,y:jGroundY-t.h,w:t.w,h:t.h,label:t.label,kind:'ground'});
+    }
+  }
+
   function jRenderScoreBar(){
     renderScoreBar('jScoreBar',jCurrentTeamIdx,function(i){
       if(jRunning) return;
@@ -2736,17 +2920,21 @@
     var dist=Math.floor(jScore);
     var best=Math.floor(jBest[jCurrentTeamIdx]||0);
     var pts=Math.floor(best/100);
-    $('jScoreText').textContent='거리 '+dist+'m';
+    $('jScoreText').textContent='거리 '+dist+'m · 난이도 '+(J_TIER_LABELS[jTier]||'Lv.1');
     $('jBestText').textContent='BEST '+best+'m · '+pts+'점';
   }
   function jResetWorld(){
-    jScore=0; jSpeed=300; jSpawn=0; jObstacles=[];
-    jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; jLast=0;
+    jScore=0; jSpeed=300; jSpawn=0.6; jObstacles=[]; jDelayed=[]; jTier=0;
+    jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; jPlayer.ducking=false; jLast=0;
     jUpdateHud(); jDraw();
   }
   function jJump(){
     if(!jRunning || !jPlayer.onGround) return;
+    jPlayer.ducking=false;
     jPlayer.vy=-640; jPlayer.onGround=false;
+  }
+  function jSetDuck(v){
+    jPlayer.ducking=!!v && jRunning && jPlayer.onGround;
   }
   function jStopGame(){
     jRunning=false;
@@ -2754,7 +2942,7 @@
   }
   function jStart(){
     jStopGame(); jResetWorld(); jRunning=true; jRenderScoreBar();
-    $('jStatus').textContent='달리는 중!';
+    $('jStatus').textContent='달리는 중! 붓·펜은 숙여서, 나머지는 점프로 피하세요.';
     $('jStartBtn').textContent='다시 시작';
     jRAF=requestAnimationFrame(jLoop);
   }
@@ -2770,6 +2958,7 @@
       var delta=Math.max(0,earned-already);
       if(delta>0){
         addMasterScore(jCurrentTeamIdx,'장애물 달리기',delta);
+        addIndividualScore(delta);
         jAwarded[jCurrentTeamIdx]=earned;
       }
     }
@@ -2781,36 +2970,37 @@
       : '충돌! '+final+'m · 최고기록 '+best+'m';
     jRenderScoreBar(); jUpdateHud(); jDraw();
   }
-  function jSpawnObstacle(){
-    var types=[
-      {w:22,h:58,label:'붓'},
-      {w:44,h:50,label:'이젤'},
-      {w:34,h:34,label:'물감통'},
-      {w:52,h:24,label:'팔레트'},
-      {w:30,h:48,label:'연필통'},
-      {w:38,h:42,label:'석고상'}
-    ];
-    var t=types[Math.floor(Math.random()*types.length)];
-    jObstacles.push({x:930,y:224-t.h,w:t.w,h:t.h,label:t.label});
+  function jPlayerHitbox(){
+    if(jPlayer.ducking && jPlayer.onGround){
+      return {x:jPlayer.x-2, y:jGroundY-jDuckH, w:jPlayer.w+4, h:jDuckH};
+    }
+    return {x:jPlayer.x, y:jPlayer.y, w:jPlayer.w, h:jPlayer.h};
   }
   function jLoop(ts){
     if(!jRunning) return;
     if(!jLast) jLast=ts;
     var dt=Math.min(.035,(ts-jLast)/1000); jLast=ts;
     jScore += dt*18;
-    jSpeed = Math.min(620,300+jScore*2.2);
+    jSpeed = Math.min(880,300+jScore*1.15);
+
     jSpawn -= dt;
-    if(jSpawn<=0){ jSpawnObstacle(); jSpawn=0.85+Math.random()*0.75; }
+    if(jSpawn<=0 && jDelayed.length===0){ jQueuePattern(); }
+    for(var di=jDelayed.length-1; di>=0; di--){
+      jDelayed[di].t -= dt;
+      if(jDelayed[di].t<=0){ jSpawnFromEntry(jDelayed[di]); jDelayed.splice(di,1); }
+    }
 
     jPlayer.vy += 1700*dt;
     jPlayer.y += jPlayer.vy*dt;
-    if(jPlayer.y>=178){ jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; }
+    if(jPlayer.y>=176){ jPlayer.y=176; jPlayer.vy=0; jPlayer.onGround=true; }
+    else{ jPlayer.ducking=false; } // 공중에서는 숙이기 불가
 
+    var hb=jPlayerHitbox();
     for(var i=jObstacles.length-1;i>=0;i--){
       var o=jObstacles[i]; o.x -= jSpeed*dt;
+      if(o.kind==='fly') o.spin=(o.spin||0)+dt*9;
       if(o.x+o.w<0) jObstacles.splice(i,1);
-      else if(jPlayer.x<o.x+o.w && jPlayer.x+jPlayer.w>o.x &&
-              jPlayer.y<o.y+o.h && jPlayer.y+jPlayer.h>o.y){
+      else if(hb.x<o.x+o.w && hb.x+hb.w>o.x && hb.y<o.y+o.h && hb.y+hb.h>o.y){
         jGameOver(); return;
       }
     }
@@ -2825,38 +3015,97 @@
     ctx.fillStyle='#20242c'; ctx.fillRect(0,224,W,H-224);
     ctx.strokeStyle='#3a3f49'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,224); ctx.lineTo(W,224); ctx.stroke();
 
-    // 픽셀 학생 캐릭터
+    // 픽셀 학생 캐릭터 (숙일 때는 낮고 넓은 자세로 표현)
     var px=jPlayer.x, py=jPlayer.y;
-    // 다리
-    ctx.fillStyle='#26354d';
-    ctx.fillRect(px+8,py+34,8,12);
-    ctx.fillRect(px+24,py+34,8,12);
-    // 운동화
-    ctx.fillStyle='#f3f3ef';
-    ctx.fillRect(px+5,py+43,12,5);
-    ctx.fillRect(px+23,py+43,13,5);
-    // 몸통(교복/후드 느낌)
-    ctx.fillStyle='#5FD9FF';
-    ctx.fillRect(px+7,py+17,27,19);
-    // 팔
-    ctx.fillStyle='#efc29f';
-    ctx.fillRect(px+2,py+20,7,14);
-    ctx.fillRect(px+33,py+19,7,14);
-    // 머리
-    ctx.fillStyle='#efc29f';
-    ctx.fillRect(px+11,py+2,22,17);
-    // 머리카락
-    ctx.fillStyle='#33261f';
-    ctx.fillRect(px+10,py,24,7);
-    ctx.fillRect(px+10,py+5,5,9);
-    // 눈
-    ctx.fillStyle='#202020';
-    ctx.fillRect(px+27,py+9,3,3);
-    // 책가방
-    ctx.fillStyle='#B18CFF';
-    ctx.fillRect(px+2,py+18,8,18);
+    var ducking = jPlayer.ducking && jPlayer.onGround;
+    if(ducking){
+      py = jGroundY - jDuckH;
+      // 웅크린 다리
+      ctx.fillStyle='#26354d';
+      ctx.fillRect(px+4,py+jDuckH-9,11,9);
+      ctx.fillRect(px+27,py+jDuckH-9,11,9);
+      ctx.fillStyle='#f3f3ef';
+      ctx.fillRect(px+2,py+jDuckH-4,13,4);
+      ctx.fillRect(px+26,py+jDuckH-4,14,4);
+      // 책가방(등 뒤)
+      ctx.fillStyle='#B18CFF';
+      ctx.fillRect(px-2,py+3,11,15);
+      // 낮게 웅크린 몸통(앞으로 숙인 자세)
+      ctx.fillStyle='#5FD9FF';
+      ctx.fillRect(px+6,py+6,32,16);
+      // 팔(무릎 짚기)
+      ctx.fillStyle='#efc29f';
+      ctx.fillRect(px+8,py+16,7,9);
+      ctx.fillRect(px+29,py+16,7,9);
+      // 머리(앞으로 낮게 숙임)
+      ctx.fillStyle='#efc29f';
+      ctx.fillRect(px+27,py-3,15,14);
+      ctx.fillStyle='#33261f';
+      ctx.fillRect(px+26,py-6,16,6);
+      // 눈
+      ctx.fillStyle='#202020';
+      ctx.fillRect(px+38,py+2,3,3);
+    }else{
+      // 다리
+      ctx.fillStyle='#26354d';
+      ctx.fillRect(px+8,py+34,8,12);
+      ctx.fillRect(px+24,py+34,8,12);
+      // 운동화
+      ctx.fillStyle='#f3f3ef';
+      ctx.fillRect(px+5,py+43,12,5);
+      ctx.fillRect(px+23,py+43,13,5);
+      // 몸통(교복/후드 느낌)
+      ctx.fillStyle='#5FD9FF';
+      ctx.fillRect(px+7,py+17,27,19);
+      // 팔
+      ctx.fillStyle='#efc29f';
+      ctx.fillRect(px+2,py+20,7,14);
+      ctx.fillRect(px+33,py+19,7,14);
+      // 머리
+      ctx.fillStyle='#efc29f';
+      ctx.fillRect(px+11,py+2,22,17);
+      // 머리카락
+      ctx.fillStyle='#33261f';
+      ctx.fillRect(px+10,py,24,7);
+      ctx.fillRect(px+10,py+5,5,9);
+      // 눈
+      ctx.fillStyle='#202020';
+      ctx.fillRect(px+27,py+9,3,3);
+      // 책가방
+      ctx.fillStyle='#B18CFF';
+      ctx.fillRect(px+2,py+18,8,18);
+    }
 
     jObstacles.forEach(function(o){
+      if(o.kind==='fly'){
+        // 화면 상단을 가로질러 날아오는 붓 / 볼펜 — 회전하며 날아오는 느낌을 줍니다.
+        var cx=o.x+o.w/2, cy=o.y+o.h/2;
+        ctx.save();
+        ctx.translate(cx,cy);
+        ctx.rotate(Math.sin(o.spin)*0.5);
+        // 잔상(모션 라인)
+        ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(-o.w/2-14,4); ctx.lineTo(-o.w/2-2,4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-o.w/2-11,-4); ctx.lineTo(-o.w/2-2,-4); ctx.stroke();
+        if(o.label==='날아오는 붓'){
+          ctx.fillStyle='#d4a06c';
+          ctx.fillRect(-o.w/2,-2,o.w*0.6,4);
+          ctx.fillStyle='#d95d62';
+          ctx.beginPath();
+          ctx.moveTo(o.w*0.1,-5); ctx.lineTo(o.w*0.1,5); ctx.lineTo(o.w/2,0);
+          ctx.closePath(); ctx.fill();
+        }else{
+          ctx.fillStyle='#4f83d1';
+          ctx.fillRect(-o.w/2,-2,o.w*0.78,4);
+          ctx.fillStyle='#e7e3dc';
+          ctx.beginPath(); ctx.moveTo(o.w*0.28,-2); ctx.lineTo(o.w*0.28,2); ctx.lineTo(o.w/2,0); ctx.closePath(); ctx.fill();
+          ctx.fillStyle='#20242c';
+          ctx.fillRect(-o.w/2-3,-1.5,4,3);
+        }
+        ctx.restore();
+        return;
+      }
+
       ctx.fillStyle='#FFB454';
 
       if(o.label==='붓'){
@@ -2923,9 +3172,21 @@
   }
   $('jStartBtn').addEventListener('click',jStart);
   $('jCanvas').addEventListener('pointerdown',function(){ if(!jRunning) jStart(); else jJump(); });
+  if($('jDuckBtn')){
+    var jDuckDown=function(e){ e.preventDefault(); jSetDuck(true); };
+    var jDuckUp=function(e){ e.preventDefault(); jSetDuck(false); };
+    $('jDuckBtn').addEventListener('pointerdown',jDuckDown);
+    $('jDuckBtn').addEventListener('pointerup',jDuckUp);
+    $('jDuckBtn').addEventListener('pointerleave',jDuckUp);
+    $('jDuckBtn').addEventListener('pointercancel',jDuckUp);
+  }
   document.addEventListener('keydown',function(e){
     if($('screen-j-play').hidden) return;
     if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); if(!jRunning) jStart(); else jJump(); }
+    if(e.code==='ArrowDown' || e.code==='KeyS'){ e.preventDefault(); jSetDuck(true); }
+  });
+  document.addEventListener('keyup',function(e){
+    if(e.code==='ArrowDown' || e.code==='KeyS'){ jSetDuck(false); }
   });
 
   renderCGallery();
